@@ -1,0 +1,17 @@
+# Alles ist gesperrt, nur die fertige Seite wird hochgeladen.
+*
+!.gitignore
+!.nojekyll
+!index.html
+!impressum.html
+!datenschutz.html
+!css/
+!css/**
+!js/
+!js/**
+!bilder/
+!bilder/**
+!schriften/
+!schriften/**
+!audio/
+!audio/**
