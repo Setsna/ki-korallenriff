@@ -81,7 +81,11 @@ img { display: block; }
 .riff-link { display: block; text-decoration: none; border-radius: 22px; }
 .riff-rahmen { overflow: hidden; background: var(--papier); border: 3px solid var(--linie); border-radius: 22px; }
 .riff-bild { display: block; width: 100%; height: auto; }
-.riff-zaehler { padding: 10px 16px; font-size: 1.1rem; font-weight: 800; text-align: center; border-top: 3px solid var(--linie); }
+.riff-leiste { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px 14px; padding: 10px 16px; border-top: 3px solid var(--linie); }
+.riff-zaehler { font-size: 1.1rem; font-weight: 800; }
+.riff-schild { fill: #F2CB97; stroke: #17324D; stroke-width: 2.5; }
+.riff-schild-text { font-family: var(--display); font-size: 13px; font-weight: 800; fill: #17324D; }
+.sonne-hinweis text { font-family: var(--display); font-size: 14px; font-weight: 700; fill: #FFFFFF; paint-order: stroke; stroke: #17324D; stroke-width: 3px; }
 .riff-hinweis { margin-top: 10px; color: var(--leise); }
 .koralle, .pflanze { transform-box: fill-box; transform-origin: 50% 100%; }
 .koralle.wartet { transform: scale(.55); }
@@ -418,7 +422,7 @@ textarea { display: block; width: 100%; margin-top: 10px; padding: 10px; font: .
 
 /* Bewegung: langsam und ruhig */
 @keyframes schweben { 50% { transform: translateY(-8px); } }
-@keyframes schwimmen { 0%, 100% { transform: translate(-300px, 12px); } 50% { transform: translate(300px, -10px); } }
+@keyframes schwimmen { 0%, 100% { transform: translate(-300px, 12px); } 50% { transform: translate(230px, -10px); } }
 @keyframes wachsen { from { transform: scale(.5); } to { transform: scale(1); } }
 @keyframes wiegen { 50% { transform: rotate(3deg); } }
 @keyframes blasen { 50% { transform: translateY(-14px); opacity: .7; } }
