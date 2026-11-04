@@ -51,8 +51,9 @@ img { display: block; }
 
 /* Kopfzeile */
 .kopf { position: sticky; top: 0; z-index: 10; background: var(--papier); border-bottom: 3px solid var(--linie); }
-.kopf-innen { max-width: 1080px; margin: auto; padding: 8px 16px; display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 6px 16px; }
-.logo { display: flex; align-items: center; gap: 8px; font-weight: 800; font-size: 1.1rem; text-decoration: none; }
+.kopf-innen { max-width: 1080px; margin: auto; padding: 6px 16px; display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 6px 14px; }
+.logo { display: flex; align-items: center; gap: clamp(6px, 1vw, 12px); font-weight: 800; font-size: clamp(1.15rem, 3.5vw, 2.5rem); line-height: 1.1; white-space: nowrap; text-decoration: none; }
+.logo img { flex: none; width: clamp(40px, 4.5vw, 56px); height: auto; }
 .nav { display: flex; gap: 8px; }
 .nav a { padding: .3em .9em; font-weight: 700; text-decoration: none; background: var(--papier); border: 2.500px solid var(--linie); border-radius: 999px; }
 .nav a[aria-current="page"] { color: var(--auf-farbe); background: var(--sonne); }
@@ -428,7 +429,6 @@ textarea { display: block; width: 100%; margin-top: 10px; padding: 10px; font: .
 /* Handy */
 @media (max-width: 640px) {
   body { font-size: 17px; }
-  .logo span { font-size: .95rem; }
   .hallo, .hallo.klein { grid-template-columns: 1fr; padding: 12px; }
   .hallo-kora { max-width: 110px; }
   .modul0 { align-items: flex-start; }
