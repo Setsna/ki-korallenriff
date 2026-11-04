@@ -94,7 +94,7 @@
     { x: 860, y: 260, form: 'roehre', f: '#F47C3C' }
   ];
   const PFLANZEN = [
-    { x: 40, y: 284 }, { x: 245, y: 284 }, { x: 455, y: 284 }, { x: 730, y: 284 }
+    { x: 46, y: 284 }, { x: 245, y: 284 }, { x: 455, y: 284 }, { x: 730, y: 284 }
   ];
   const halm = (dx, h, c) => `<path class="halm" d="M${dx} 0C${dx - 8} ${-h * .35} ${dx + 8} ${-h * .65} ${dx + 1} ${-h}" fill="none" stroke="${c}" stroke-width="6" stroke-linecap="round"/>`;
 
@@ -108,7 +108,7 @@
     const pflanzenSvg = PFLANZEN.map((p, i) => {
       const da = modulFertig(R.module[i]);
       const c = da ? '#37A85B' : '#AFC4B6';
-      return `<g transform="translate(${p.x} ${p.y})"><g class="pflanze ${da ? 'gewachsen' : 'wartet'}">${halm(-9, 58, c)}${halm(0, 74, c)}${halm(9, 52, c)}</g><rect class="riff-schild" x="-31" y="4" width="62" height="23" rx="6"/><text class="riff-schild-text" x="0" y="20" text-anchor="middle">Modul ${i + 1}</text></g>`;
+      return `<g transform="translate(${p.x} ${p.y})"><g transform="translate(24 22)"><g class="pflanze ${da ? 'gewachsen' : 'wartet'}">${halm(-9, 80, c)}${halm(0, 96, c)}${halm(9, 74, c)}</g></g><image class="riff-schild" href="bilder/schild.png" x="-42" y="-42" width="84" height="74"/><text class="riff-schild-text" x="0" y="-18" text-anchor="middle">Modul ${i + 1}</text></g>`;
     }).join('');
     const sonne = fertig('erz');
     return `<svg class="riff-bild" viewBox="0 0 940 320" role="img" aria-label="${esc(label)}" data-korallen="${n}">

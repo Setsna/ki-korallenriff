@@ -83,13 +83,12 @@ img { display: block; }
 .riff-bild { display: block; width: 100%; height: auto; }
 .riff-leiste { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px 14px; padding: 10px 16px; border-top: 3px solid var(--linie); }
 .riff-zaehler { font-size: 1.1rem; font-weight: 800; }
-.riff-schild { fill: #F2CB97; stroke: #17324D; stroke-width: 2.5; }
-.riff-schild-text { font-family: var(--display); font-size: 13px; font-weight: 800; fill: #17324D; }
+.riff-schild-text { font-family: var(--display); font-size: 14px; font-weight: 800; fill: #FFF4DC; stroke: #4A2A12; stroke-width: 2.5px; paint-order: stroke; }
 .sonne-hinweis text { font-family: var(--display); font-size: 14px; font-weight: 700; fill: #FFFFFF; paint-order: stroke; stroke: #17324D; stroke-width: 3px; }
 .riff-hinweis { margin-top: 10px; color: var(--leise); }
 .koralle, .pflanze { transform-box: fill-box; transform-origin: 50% 100%; }
 .koralle.wartet { transform: scale(.55); }
-.pflanze.wartet { transform: scale(.4); }
+.pflanze.wartet { transform: scale(.3); }
 .koralle.gewachsen { animation: wachsen .9s ease-out both; }
 .pflanze.gewachsen { animation: wachsen .9s ease-out both, wiegen 6s ease-in-out .9s infinite; }
 .riff-kora { animation: schwimmen 24s ease-in-out infinite; }
