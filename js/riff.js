@@ -83,18 +83,18 @@
     tisch: f => `<rect x="-6" y="-30" width="12" height="30" rx="4" fill="${f}"/><path d="M-36 -30C-30 -44 30 -44 36 -30C22 -25 -22 -25 -36 -30Z" fill="${f}"/>`
   };
   const KORALLEN = [
-    { x: 92, y: 262, form: 'geweih', f: '#F2668B' },
-    { x: 190, y: 276, form: 'hirn', f: '#F7A23C' },
-    { x: 282, y: 256, form: 'faecher', f: '#A56BE0' },
-    { x: 382, y: 274, form: 'roehre', f: '#FFC94A' },
-    { x: 474, y: 258, form: 'tisch', f: '#3CC6A0' },
-    { x: 570, y: 278, form: 'geweih', f: '#FF7A6B' },
-    { x: 662, y: 258, form: 'hirn', f: '#5B8DEF' },
-    { x: 756, y: 276, form: 'faecher', f: '#EF5DA8' },
-    { x: 850, y: 260, form: 'roehre', f: '#F47C3C' }
+    { x: 100, y: 262, form: 'geweih', f: '#F2668B' },
+    { x: 165, y: 276, form: 'hirn', f: '#F7A23C' },
+    { x: 310, y: 256, form: 'faecher', f: '#A56BE0' },
+    { x: 375, y: 274, form: 'roehre', f: '#FFC94A' },
+    { x: 520, y: 258, form: 'tisch', f: '#3CC6A0' },
+    { x: 585, y: 278, form: 'geweih', f: '#FF7A6B' },
+    { x: 650, y: 258, form: 'hirn', f: '#5B8DEF' },
+    { x: 795, y: 276, form: 'faecher', f: '#EF5DA8' },
+    { x: 860, y: 260, form: 'roehre', f: '#F47C3C' }
   ];
   const PFLANZEN = [
-    { x: 38, y: 290 }, { x: 330, y: 296 }, { x: 618, y: 298 }, { x: 900, y: 296 }
+    { x: 40, y: 284 }, { x: 245, y: 284 }, { x: 455, y: 284 }, { x: 730, y: 284 }
   ];
   const halm = (dx, h, c) => `<path class="halm" d="M${dx} 0C${dx - 8} ${-h * .35} ${dx + 8} ${-h * .65} ${dx + 1} ${-h}" fill="none" stroke="${c}" stroke-width="6" stroke-linecap="round"/>`;
 
@@ -108,7 +108,7 @@
     const pflanzenSvg = PFLANZEN.map((p, i) => {
       const da = modulFertig(R.module[i]);
       const c = da ? '#37A85B' : '#AFC4B6';
-      return `<g transform="translate(${p.x} ${p.y})"><g class="pflanze ${da ? 'gewachsen' : 'wartet'}">${halm(-9, 58, c)}${halm(0, 74, c)}${halm(9, 52, c)}</g></g>`;
+      return `<g transform="translate(${p.x} ${p.y})"><g class="pflanze ${da ? 'gewachsen' : 'wartet'}">${halm(-9, 58, c)}${halm(0, 74, c)}${halm(9, 52, c)}</g><rect class="riff-schild" x="-31" y="4" width="62" height="23" rx="6"/><text class="riff-schild-text" x="0" y="20" text-anchor="middle">Modul ${i + 1}</text></g>`;
     }).join('');
     const sonne = fertig('erz');
     return `<svg class="riff-bild" viewBox="0 0 940 320" role="img" aria-label="${esc(label)}" data-korallen="${n}">
@@ -121,12 +121,13 @@
       ${sonne ? `<g class="strahlen"><path d="M120 0H190L120 250H20Z" fill="url(#strahl)"/><path d="M360 0H450L420 260H290Z" fill="url(#strahl)"/><path d="M640 0H710L720 250H600Z" fill="url(#strahl)"/><path d="M820 0H890L930 240H820Z" fill="url(#strahl)"/></g>` : ''}
       <g class="blasen" fill="rgba(255,255,255,.55)"><circle cx="160" cy="210" r="4"/><circle cx="168" cy="186" r="2.500"/><circle cx="520" cy="200" r="3.500"/><circle cx="514" cy="170" r="2.500"/><circle cx="808" cy="190" r="4"/><circle cx="816" cy="160" r="2.500"/></g>
       <path d="M0 262C150 240 290 268 470 256S770 242 940 262V320H0Z" fill="url(#sand)"/>
-      <g fill="#A9B4B8"><ellipse cx="142" cy="290" rx="24" ry="11"/><ellipse cx="438" cy="298" rx="20" ry="9"/><ellipse cx="708" cy="294" rx="26" ry="11"/></g>
+      <g fill="#A9B4B8"><ellipse cx="140" cy="303" rx="22" ry="9"/><ellipse cx="395" cy="306" rx="18" ry="8"/><ellipse cx="665" cy="304" rx="24" ry="10"/></g>
       ${pflanzenSvg}${korallenSvg}
+      ${sonne ? '' : '<g class="sonne-hinweis"><circle cx="860" cy="42" r="20" fill="#FFD866" stroke="#FFF8D6" stroke-width="3"/><text x="860" y="86" text-anchor="middle">Film ansehen: Sonne!</text></g>'}
       <image class="riff-kora" href="bilder/kora.png" x="400" y="26" width="110" height="110"/>
     </svg>`;
   }
-  const riffBlock = () => `<div class="riff-rahmen">${riffSVG()}<p class="riff-zaehler" id="riff-zaehler">${zaehler()}</p></div>`;
+  const riffBlock = (knopf = false) => `<div class="riff-rahmen">${riffSVG()}<div class="riff-leiste"><p class="riff-zaehler" id="riff-zaehler">${zaehler()}</p>${knopf ? '<span class="knopf leise-knopf">Tauchbuch öffnen</span>' : ''}</div></div>`;
 
   /* ---------- Symbole für „So arbeitest du hier“ (eigene Zeichnungen) ---------- */
   const STRICH = 'stroke="#17324D" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"';
@@ -216,7 +217,7 @@ Beginne mit einer kurzen Begrüßung und frag, wobei du helfen kannst.`;
     </section>
 
     <h2 class="abschnitt">Dein Riff</h2>
-    <a class="riff-link" href="#heft" aria-label="Zum Tauchbuch">${riffBlock()}</a>
+    <a class="riff-link" href="#heft" aria-label="Zum Tauchbuch">${riffBlock(true)}</a>
     <p class="riff-hinweis">Dein Riff wächst mit jedem Material, das du fertig machst.${fertig('erz') ? '' : ' Schau die Große Erzählung an, dann scheint die Sonne ins Wasser.'}</p>
 
     <h2 class="abschnitt">Heute bereit für dich</h2>
