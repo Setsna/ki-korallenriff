@@ -70,9 +70,14 @@ Es gibt keine Anmeldung und keine Datenbank, und die Stände wandern nicht zwisc
 Die Seite setzt keine Cookies und lädt nichts von fremden Servern nach, auch die Schriften liegen hier im Repository.
 **Wer ändert, welche Daten gespeichert werden, oder einen neuen Dienst einbindet, muss `datenschutz.html` mitändern.**
 
-## Nach einer Änderung
+## Nach einer Änderung: Versionsnummer hochzählen
 
-Browser merken sich `js` und `css` eine Weile. Wer direkt nach dem Hochladen noch die alte Fassung sieht, lädt die Seite mit `Strg + F5` neu.
+Browser merken sich `js` und `css` eine Weile und liefern sonst die alte Fassung aus.
+Deshalb hängt hinter jeder lokalen `js`- und `css`-Datei in `index.html`, `impressum.html` und `datenschutz.html` ein `?v=2`.
+**Wer etwas an `js` oder `css` ändert, zählt diese Zahl in allen drei Dateien um eins hoch.**
+Dann laden die Geräte beim nächsten Öffnen der Seite die neue Fassung.
+
+Direkt nach dem Hochladen kann die Seite selbst noch ein paar Minuten alt sein, weil auch `index.html` kurz zwischengespeichert wird.
 
 ## Hochladen
 
