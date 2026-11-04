@@ -88,3 +88,5 @@ Arbeitsdateien und Originale bleiben dadurch lokal. Eine neue Datei oder ein neu
 
 Reines HTML, CSS und JavaScript ohne Framework. Gehostet auf GitHub Pages.
 Die Szenenbilder und Kora sind mit Canva erstellt. Die Schriften Andika, Baloo 2 und IBM Plex Mono stehen unter der SIL Open Font License, die Lizenztexte liegen in `schriften/`.
+
+Alle drei Seiten tragen `<meta name="robots" content="noindex, nofollow">`. Die Seite ist öffentlich erreichbar, soll aber nicht über Suchmaschinen gefunden werden.
