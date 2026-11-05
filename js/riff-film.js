@@ -2,6 +2,9 @@
    Die Szenenbilder kommen aus Canva, die Bewegung darüber wird hier gezeichnet.
    draw(ctx, t) erzeugt jedes Bild allein aus der Zeit, darum passt es immer zum Schieberegler. */
 (() => {
+  /* Wird Bild oder Ton einer Szene getauscht: Zahl hier hochzählen, sonst zeigen die Geräte die alte Fassung. */
+  const STAND = { 12: 2 };
+  const stand = nr => (STAND[nr] ? `?v=${STAND[nr]}` : '');
   'use strict';
   const W = 1280, H = 720;
   const TINTE = '#17324D';
@@ -70,7 +73,7 @@
   const U = u => u * BB, V = v => BY + v * BH;
   const bildSpeicher = {};
   function szenenBild(nr) {
-    if (!bildSpeicher[nr]) { const i = new Image(); i.src = `bilder/film/szene-${String(nr).padStart(2, '0')}.jpg`; bildSpeicher[nr] = i; }
+    if (!bildSpeicher[nr]) { const i = new Image(); i.src = `bilder/film/szene-${String(nr).padStart(2, '0')}.jpg${stand(nr)}`; bildSpeicher[nr] = i; }
     return bildSpeicher[nr];
   }
   function bildfeld(ctx, lt, s) {
@@ -237,7 +240,7 @@
           sprechblase(ctx, U(((i * 0.211) % 0.95) + 0.03) + Math.sin(d * 6 + i) * 8, V(0.62 - d * 0.62), 15 + (i % 3) * 5, farben[i % 6], Math.sin(d * Math.PI) * 0.92);
         }
       } },
-    { nr: 12, jahr: 'heute', titel: 'Ein Echo von uns allen', saetze: ['Und heute bist du hier.', 'Eine KI hat nie einen Apfel gegessen. Sie ist aus den Texten vieler Menschen gemacht.', 'Wenn du mit ihr schreibst, antwortet dir ein Echo von uns allen.', 'Was möchtest du herausfinden?'],
+    { nr: 12, jahr: 'heute', titel: 'Ein Echo von uns allen', saetze: ['Und heute bist du hier.', 'Eine KI hat nie eine Katze gestreichelt. Trotzdem erkennt sie eine Katze, denn sie hat aus den Bildern und Texten vieler Menschen gelernt.', 'Wenn du mit ihr schreibst, antwortet dir ein Echo von uns allen.', 'Was möchtest du herausfinden?'],
       bewegung(ctx, lt, s) {
         const z = satzStart(s, 2);
         if (lt < z) return;
@@ -263,7 +266,7 @@
     9: [[1.8, 6.64], [7.58, 14.06], [14.96, 17.82]],
     10: [[2.18, 6.76], [7.88, 11.9], [12.82, 17.56]],
     11: [[2.22, 6.86], [7.88, 11.74]],
-    12: [[1.8, 3.7], [5.18, 12.02], [13.26, 17.98], [19.16, 20.62]]
+    12: [[1.75, 3.89], [4.95, 16.1], [17.34, 21.75], [23.03, 24.46]]
   };
   let DAUER = 0;
   (function zeitplan() {
@@ -273,7 +276,7 @@
       const aufnahme = AUFNAHME[s.nr];
       if (aufnahme) {
         const ab = aufnahme[0][0] - 0.35, bis = aufnahme[aufnahme.length - 1][1];
-        s.ton = { datei: `audio/szene-${String(s.nr).padStart(2, '0')}.m4a`, ab };
+        s.ton = { datei: `audio/szene-${String(s.nr).padStart(2, '0')}.m4a${stand(s.nr)}`, ab };
         aufnahme.forEach(([von, ende], i) => {
           const naechster = aufnahme[i + 1] ? aufnahme[i + 1][0] - 0.1 : bis + 0.5;
           s.zeit.push([von - ab - 0.1, naechster - ab]);
