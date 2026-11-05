@@ -77,9 +77,11 @@ Die Seite setzt keine Cookies und lädt nichts von fremden Servern nach, auch di
 ## Nach einer Änderung: Versionsnummer hochzählen
 
 Browser merken sich `js` und `css` eine Weile und liefern sonst die alte Fassung aus.
-Deshalb hängt hinter jeder lokalen `js`- und `css`-Datei in `index.html`, `impressum.html` und `datenschutz.html` ein `?v=5`.
+Deshalb hängt hinter jeder lokalen `js`- und `css`-Datei in `index.html`, `impressum.html` und `datenschutz.html` ein `?v=6`.
 **Wer etwas an `js` oder `css` ändert, zählt diese Zahl in allen drei Dateien um eins hoch.**
 Dann laden die Geräte beim nächsten Öffnen der Seite die neue Fassung.
+
+Bild und Ton haben eine eigene Nummer: Wird eine Szene getauscht, die Zahl in `STAND` am Anfang von `js/riff-film.js` hochzählen.
 
 Direkt nach dem Hochladen kann die Seite selbst noch ein paar Minuten alt sein, weil auch `index.html` kurz zwischengespeichert wird.
 
