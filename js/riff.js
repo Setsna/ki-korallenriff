@@ -10,8 +10,8 @@
   /* ---------- Speicher: bleibt nur in diesem Browser ---------- */
   const KEY = 'ki-korallenriff-v2', ALT_KEY = 'ki-korallenriff-v1', WER_KEY = 'ki-korallenriff-wer';
   const leererSpeicher = () => ({ name: '', done: {}, stempel: {}, zeit: {}, eintraege: {}, ziele: {} });
-  /* Mehrere Kinder pro Gerät: Jedes hat seinen eigenen Stand. Die Auswahl gilt nur für diese Sitzung,
-     damit das nächste Kind nicht aus Versehen im Riff des vorigen landet. */
+  /* Normalfall: Jedes Kind hat einen eigenen iPad-Account, also ein Kind pro Speicher. Es landet direkt in seinem Riff.
+     Sind doch mehrere Kinder angelegt, fragt die Seite pro Sitzung nach, damit niemand im fremden Riff landet. */
   let kinder = [], aktivId = null, store = leererSpeicher();
   const kinderSichern = () => {
     try { localStorage.setItem(KEY, JSON.stringify({ kinder })); } catch (e) { /* Ohne Speicher läuft die Seite trotzdem. */ }
@@ -28,9 +28,14 @@
         if (localStorage.getItem(KEY)) localStorage.removeItem(ALT_KEY);
       }
     }
-    const k = kinder.find(x => x.id === sessionStorage.getItem(WER_KEY));
+    const k = kinder.length === 1 ? kinder[0] : kinder.find(x => x.id === sessionStorage.getItem(WER_KEY));
     if (k) { aktivId = k.id; store = k; }
   } catch (e) { /* Ohne Speicher läuft die Seite trotzdem. */ }
+
+  /* Bittet den Browser, den Fortschritt nicht von selbst zu löschen. Ob er zustimmt, entscheidet der Browser. */
+  const speicherSchuetzen = () => {
+    try { if (navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(() => {}); } catch (e) { /* Dann bleibt es beim Normalfall. */ }
+  };
 
   /* Vorschau zum Ansehen: index.html?vorschau=5 zeigt das Riff mit 5 fertigen Stationen.
      Dabei wird nichts gespeichert. */
@@ -58,11 +63,11 @@
     const h = document.getElementById('vorschau-hinweis');
     h.hidden = false;
     h.textContent = `Vorschau mit ${n} fertigen Stationen. Hier wird nichts gespeichert.`;
-    document.getElementById('nav-wer').hidden = true;
   }
   const save = () => {
     if (istVorschau || !aktivId) return;
     kinderSichern();
+    speicherSchuetzen();
   };
 
   /* ---------- Lernzeit: läuft nur, solange eine Station sichtbar offen ist ---------- */
@@ -255,6 +260,7 @@ Beginne mit einer kurzen Begrüßung und frag, wobei du helfen kannst.`;
       const k = Object.assign(leererSpeicher(), { id: `k${Date.now()}`, name });
       kinder.push(k);
       kinderSichern();
+      speicherSchuetzen();
       waehlen(k);
     });
   }
@@ -267,7 +273,7 @@ Beginne mit einer kurzen Begrüßung und frag, wobei du helfen kannst.`;
       <div class="blase">
         <h1 id="gruss">${gruss}</h1>
         <p>Komm mit ins Korallenriff! Hier findest du selbst heraus, wie Computer lernen. Such dir etwas aus, probier es aus, so lange du magst, und räum es danach wieder auf.</p>
-        ${store.name ? `<p class="leise">Du bist nicht ${esc(store.name)}? <a href="#wer">Kind wechseln</a></p>` : ''}
+        ${kinder.length > 1 ? `<p class="leise">Du bist nicht ${esc(store.name)}? <a href="#wer">Kind wechseln</a></p>` : ''}
       </div>
     </section>
 
@@ -864,6 +870,7 @@ Beginne mit einer kurzen Begrüßung und frag, wobei du helfen kannst.`;
     const modulSeite = R.module.find(m => m.id === ziel);
     const aufHeft = ziel === 'heft';
     const aufWer = !istVorschau && (ziel === 'wer' || !aktivId);
+    document.getElementById('nav-wer').hidden = istVorschau || kinder.length < 2;
     uhrStoppen();
     wartendeUhr = null;
     kora.leeren();
