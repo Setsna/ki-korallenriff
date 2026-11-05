@@ -3,7 +3,7 @@
    draw(ctx, t) erzeugt jedes Bild allein aus der Zeit, darum passt es immer zum Schieberegler. */
 (() => {
   /* Wird Bild oder Ton einer Szene getauscht: Zahl hier hochzählen, sonst zeigen die Geräte die alte Fassung. */
-  const STAND = { 12: 2 };
+  const STAND = { 2: 2, 12: 2 };
   const stand = nr => (STAND[nr] ? `?v=${STAND[nr]}` : '');
   'use strict';
   const W = 1280, H = 720;
@@ -158,7 +158,7 @@
         schrift(ctx, '?', 0, 4, 70, TINTE, SCHRIFT, 800);
         ctx.restore();
       } },
-    { nr: 2, jahr: '1843', titel: 'Ada Lovelace', saetze: ['1843: Ada Lovelace beschreibt eine große Rechenmaschine.', 'Sie ahnt: Die Maschine könnte sogar mit Musik arbeiten!', 'Aber sie sagt auch: Die Maschine tut nur, was man ihr befiehlt.'],
+    { nr: 2, jahr: '1843', titel: 'Ada Lovelace', saetze: ['1843: Ada Lovelace beschreibt eine große Rechenmaschine.', 'Sie ahnt: Die Maschine könnte sogar Musik erfinden!', 'Aber sie sagt auch: Die Maschine tut nur, was man ihr befiehlt.'],
       bewegung(ctx, lt, s) {
         const z = satzStart(s, 1);
         if (lt < z) return;
@@ -257,7 +257,7 @@
      Die Stille am Anfang und Ende der Dateien wird übersprungen. */
   const AUFNAHME = {
     1: [[1.64, 7.6], [9.02, 14.68], [16.08, 20.34]],
-    2: [[1.68, 10.24], [11.58, 16.76], [18.1, 23.28]],
+    2: [[1.98, 10.34], [11.7, 16.44], [17.79, 22.89]],
     3: [[1.72, 8.9], [9.94, 16.54], [17.38, 19.88]],
     4: [[1.7, 8.78], [9.62, 16.98], [18.32, 23.36]],
     5: [[1.84, 9.06], [10.24, 13.68], [14.94, 21.92]],
