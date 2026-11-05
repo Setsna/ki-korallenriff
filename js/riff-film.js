@@ -152,8 +152,9 @@
       bewegung(ctx, lt, s) {
         if (lt < satzStart(s, 2)) return;
         const k = auf(lt, satzStart(s, 2), 0.6);
-        ctx.save(); ctx.translate(U(0.5), V(0.2)); ctx.scale(k, k);
-        kreis(ctx, 0, 0, 52, 'rgba(255,255,255,.92)', TINTE, 4);
+        ctx.save(); ctx.translate(U(0.83), V(0.28)); ctx.scale(k, k);
+        kreis(ctx, -8, 66, 9, '#EFD3A0', TINTE, 3);
+        kreis(ctx, 0, 0, 52, '#EFD3A0', TINTE, 4);
         schrift(ctx, '?', 0, 4, 70, TINTE, SCHRIFT, 800);
         ctx.restore();
       } },
