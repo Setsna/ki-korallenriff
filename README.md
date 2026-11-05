@@ -61,9 +61,11 @@ In der Vorschau wird nichts gespeichert.
 
 ## Wo der Fortschritt liegt
 
-Nur im Browser des Geräts, unter dem Schlüssel `ki-korallenriff-v1` im `localStorage`: Vorname, fertige Stationen, Stempel, Lernzeiten, Einträge und Einschätzungen.
+Nur im Browser des Geräts, unter dem Schlüssel `ki-korallenriff-v2` im `localStorage`, je Kind: Vorname, fertige Stationen, Stempel, Lernzeiten, Einträge und Einschätzungen.
+Ein alter Stand unter `ki-korallenriff-v1` wird beim ersten Öffnen als erstes Kind übernommen.
+Beim Öffnen fragt die Seite „Wer taucht heute?“. Die Wahl gilt nur für die Sitzung (`sessionStorage`), und über „Kind wechseln“ kommt das nächste Kind dran. Einen Passwortschutz zwischen den Kindern gibt es nicht.
 Es gibt keine Anmeldung und keine Datenbank, und die Stände wandern nicht zwischen Geräten.
-„Alles löschen / Neu anfangen“ im Tauchbuch löscht den Stand auf diesem Gerät.
+„Alles löschen / Neu anfangen“ im Tauchbuch löscht nur den Stand des gewählten Kindes.
 
 ## Datenschutz
 
@@ -73,7 +75,7 @@ Die Seite setzt keine Cookies und lädt nichts von fremden Servern nach, auch di
 ## Nach einer Änderung: Versionsnummer hochzählen
 
 Browser merken sich `js` und `css` eine Weile und liefern sonst die alte Fassung aus.
-Deshalb hängt hinter jeder lokalen `js`- und `css`-Datei in `index.html`, `impressum.html` und `datenschutz.html` ein `?v=3`.
+Deshalb hängt hinter jeder lokalen `js`- und `css`-Datei in `index.html`, `impressum.html` und `datenschutz.html` ein `?v=4`.
 **Wer etwas an `js` oder `css` ändert, zählt diese Zahl in allen drei Dateien um eins hoch.**
 Dann laden die Geräte beim nächsten Öffnen der Seite die neue Fassung.
 

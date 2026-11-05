@@ -81,6 +81,8 @@ img { display: block; }
 .riff-link { display: block; text-decoration: none; border-radius: 22px; }
 .riff-rahmen { overflow: hidden; background: var(--papier); border: 3px solid var(--linie); border-radius: 22px; }
 .riff-bild { display: block; width: 100%; height: auto; }
+.wer-liste { display: flex; flex-wrap: wrap; gap: 10px; }
+.wer-kind { min-height: 48px; font-size: 1.1rem; }
 .riff-leiste { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px 14px; padding: 10px 16px; border-top: 3px solid var(--linie); }
 .riff-zaehler { font-size: 1.1rem; font-weight: 800; }
 .riff-schild-text { font-family: var(--display); font-size: 14px; font-weight: 800; fill: #FFF4DC; stroke: #4A2A12; stroke-width: 2.5px; paint-order: stroke; }
@@ -96,7 +98,15 @@ img { display: block; }
 
 /* Karten */
 .bereit-liste { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 12px; }
-.bereit-karte { display: flex; align-items: center; gap: 12px; padding: 12px 14px; text-decoration: none; background: var(--papier); border: 3px solid var(--linie); border-radius: 18px; box-shadow: var(--schatten); }
+.bereit-karte, .karte {
+  --kachel: var(--farbe, var(--meer));
+  background:
+    radial-gradient(circle at 90% 14%, rgba(255,255,255,.75) 0 5px, transparent 6px),
+    radial-gradient(circle at 80% 27%, rgba(255,255,255,.6) 0 3px, transparent 4px),
+    radial-gradient(circle at 94% 36%, rgba(255,255,255,.5) 0 2px, transparent 3px),
+    linear-gradient(165deg, color-mix(in srgb, var(--kachel) 8%, var(--papier)), color-mix(in srgb, var(--kachel) 30%, var(--papier)));
+}
+.bereit-karte { display: flex; align-items: center; gap: 12px; padding: 12px 14px; text-decoration: none; border: 3px solid var(--linie); border-radius: 18px; box-shadow: var(--schatten); }
 .bereit-karte b { display: block; line-height: 1.2; }
 .bereit-karte small { color: var(--leise); font-size: .9rem; }
 .bereit-karte.erz { background: var(--warm); }
@@ -118,7 +128,7 @@ img { display: block; }
 .modul-kopf h3 { font-size: 1.25rem; }
 .modul-zahl { flex: none; padding: .05em .7em; font-weight: 800; color: var(--auf-farbe); background: var(--farbe); border: 2.500px solid var(--linie); border-radius: 999px; }
 .karten { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 12px; }
-.karte { display: flex; flex-direction: column; gap: 4px; padding: 12px; text-decoration: none; background: var(--papier); border: 3px solid var(--linie); border-radius: 16px; }
+.karte { display: flex; flex-direction: column; gap: 4px; padding: 12px; text-decoration: none; border: 3px solid var(--linie); border-radius: 16px; }
 a.karte { box-shadow: var(--schatten); }
 a.karte:hover, .bereit-karte:hover, .modul0:hover { transform: translateY(-2px); }
 .karte-titel { margin-top: 4px; font-weight: 800; line-height: 1.2; }
