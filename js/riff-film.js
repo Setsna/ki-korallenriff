@@ -3,7 +3,7 @@
    draw(ctx, t) erzeugt jedes Bild allein aus der Zeit, darum passt es immer zum Schieberegler. */
 (() => {
   /* Wird Bild oder Ton einer Szene getauscht: Zahl hier hochzählen, sonst zeigen die Geräte die alte Fassung. */
-  const STAND = { 2: 2, 12: 2 };
+  const STAND = { 1: 2, 2: 2, 12: 2 };
   const stand = nr => (STAND[nr] ? `?v=${STAND[nr]}` : '');
   'use strict';
   const W = 1280, H = 720;
@@ -182,15 +182,7 @@
       } },
     { nr: 4, jahr: '1956', titel: 'Ein Name', saetze: ['1956: Forschende geben dem Ganzen einen Namen: Künstliche Intelligenz.', 'Ihre Idee: Wir schreiben einfach alle Regeln auf!', 'Doch die Welt hat mehr Regeln, als auf jede Papierrolle passen.'] },
     { nr: 5, jahr: '1957', titel: 'Das Perzeptron', saetze: ['1957: Frank Rosenblatt baut das Perzeptron.', 'Es bekommt keine Regeln, sondern Beispiele.', 'Nach jedem Fehler rückt es seine Linie ein Stück weiter. So lernt es!'], bewegung: tafel },
-    { nr: 6, jahr: '1966', titel: 'ELIZA', saetze: ['1966: Joseph Weizenbaum schreibt das Programm ELIZA.', 'ELIZA wiederholt nur Wörter. Trotzdem erzählen ihr Menschen ihre Sorgen.', 'Weizenbaum warnt: Trau Maschinen nicht mehr zu, als sie können.'],
-      bewegung(ctx, lt, s) {
-        const z = satzStart(s, 1);
-        if (lt < z || lt > satzStart(s, 2)) return;
-        for (let i = 0; i < 3; i++) {
-          const d = ((lt - z) * 0.35 + i / 3) % 1;
-          sprechblase(ctx, U(0.3 + d * 0.05), V(0.62 - d * 0.42), 26 + d * 10, '#FFFFFF', Math.sin(d * Math.PI) * 0.9);
-        }
-      } },
+    { nr: 6, jahr: '1966', titel: 'ELIZA', saetze: ['1966: Joseph Weizenbaum schreibt das Programm ELIZA.', 'ELIZA wiederholt nur Wörter. Trotzdem erzählen ihr Menschen ihre Sorgen.', 'Weizenbaum warnt: Trau Maschinen nicht mehr zu, als sie können.'] },
     { nr: 7, jahr: 'ca. 1974–1993', titel: 'KI-Winter', saetze: ['Dann wird es still. Die Computer sind zu langsam, und es fehlen Daten.', 'Man nennt diese Zeit den KI-Winter. Aber einige forschen weiter.'],
       bewegung(ctx, lt, s) {
         ctx.save();
@@ -256,7 +248,7 @@
   /* Zeitplan nach den Aufnahmen: Wann beginnt und endet jeder Satz in der Datei (Sekunden).
      Die Stille am Anfang und Ende der Dateien wird übersprungen. */
   const AUFNAHME = {
-    1: [[1.64, 7.6], [9.02, 14.68], [16.08, 20.34]],
+    1: [[2.47, 6.87], [8.25, 13.63], [14.96, 18.85]],
     2: [[1.98, 10.34], [11.7, 16.44], [17.79, 22.89]],
     3: [[1.72, 8.9], [9.94, 16.54], [17.38, 19.88]],
     4: [[1.7, 8.78], [9.62, 16.98], [18.32, 23.36]],
