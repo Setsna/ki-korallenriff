@@ -8,12 +8,28 @@
   const PER_ID = Object.fromEntries(STATIONEN.map(s => [s.id, s]));
 
   /* ---------- Speicher: bleibt nur in diesem Browser ---------- */
-  const KEY = 'ki-korallenriff-v1';
+  const KEY = 'ki-korallenriff-v2', ALT_KEY = 'ki-korallenriff-v1', WER_KEY = 'ki-korallenriff-wer';
   const leererSpeicher = () => ({ name: '', done: {}, stempel: {}, zeit: {}, eintraege: {}, ziele: {} });
-  let store = leererSpeicher();
+  /* Mehrere Kinder pro Gerät: Jedes hat seinen eigenen Stand. Die Auswahl gilt nur für diese Sitzung,
+     damit das nächste Kind nicht aus Versehen im Riff des vorigen landet. */
+  let kinder = [], aktivId = null, store = leererSpeicher();
+  const kinderSichern = () => {
+    try { localStorage.setItem(KEY, JSON.stringify({ kinder })); } catch (e) { /* Ohne Speicher läuft die Seite trotzdem. */ }
+  };
   try {
-    const s = JSON.parse(localStorage.getItem(KEY) || 'null');
-    if (s && typeof s === 'object') store = Object.assign(store, s);
+    const gespeichert = JSON.parse(localStorage.getItem(KEY) || 'null');
+    if (gespeichert && Array.isArray(gespeichert.kinder)) {
+      kinder = gespeichert.kinder.filter(k => k && k.id && k.name).map(k => Object.assign(leererSpeicher(), k));
+    } else {
+      const alt = JSON.parse(localStorage.getItem(ALT_KEY) || 'null');
+      if (alt && typeof alt === 'object' && (alt.name || Object.keys(alt.done || {}).length)) {
+        kinder = [Object.assign(leererSpeicher(), alt, { id: `k${Date.now()}`, name: alt.name || 'Mein Riff' })];
+        kinderSichern();
+        if (localStorage.getItem(KEY)) localStorage.removeItem(ALT_KEY);
+      }
+    }
+    const k = kinder.find(x => x.id === sessionStorage.getItem(WER_KEY));
+    if (k) { aktivId = k.id; store = k; }
   } catch (e) { /* Ohne Speicher läuft die Seite trotzdem. */ }
 
   /* Vorschau zum Ansehen: index.html?vorschau=5 zeigt das Riff mit 5 fertigen Stationen.
@@ -22,7 +38,7 @@
   const istVorschau = vorschau !== null && /^\d+$/.test(vorschau);
   if (istVorschau) {
     const n = Math.min(+vorschau, STATIONEN.length);
-    store = Object.assign(leererSpeicher(), { name: store.name });
+    store = leererSpeicher();
     STATIONEN.slice(0, n).forEach((s, i) => {
       store.done[s.id] = true;
       store.stempel[s.id] = Date.now();
@@ -42,10 +58,11 @@
     const h = document.getElementById('vorschau-hinweis');
     h.hidden = false;
     h.textContent = `Vorschau mit ${n} fertigen Stationen. Hier wird nichts gespeichert.`;
+    document.getElementById('nav-wer').hidden = true;
   }
   const save = () => {
-    if (istVorschau) return;
-    try { localStorage.setItem(KEY, JSON.stringify(store)); } catch (e) { /* siehe oben */ }
+    if (istVorschau || !aktivId) return;
+    kinderSichern();
   };
 
   /* ---------- Lernzeit: läuft nur, solange eine Station sichtbar offen ist ---------- */
@@ -204,6 +221,44 @@ Beginne mit einer kurzen Begrüßung und frag, wobei du helfen kannst.`;
   }
 
   /* ---------- Ansichten ---------- */
+  function ansichtWer() {
+    const liste = kinder.map(k => `<button type="button" class="knopf wer-kind" data-kind="${esc(k.id)}">${esc(k.name)}</button>`).join('');
+    app.innerHTML = `
+    <section class="hallo">
+      <img class="hallo-kora" src="bilder/kora.png" alt="Kora, die Meeresschildkröte, winkt dir zu" width="200" height="200">
+      <div class="blase">
+        <h1>Wer taucht heute?</h1>
+        ${kinder.length ? `<p>Tippe auf deinen Namen.</p><div class="wer-liste">${liste}</div>` : '<p>Schreib deinen Vornamen auf. Dann wächst hier dein eigenes Riff.</p>'}
+        <form class="name-zeile" id="wer-neu"><label for="vorname">${kinder.length ? 'Du bist neu? Wie heißt du?' : 'Wie heißt du?'}</label><input id="vorname" type="text" maxlength="20" placeholder="dein Vorname" autocomplete="off"><button type="submit" class="knopf">Los geht's</button><span class="leise" id="wer-meldung" role="status">Bleibt nur auf diesem Gerät.</span></form>
+      </div>
+    </section>`;
+    const waehlen = k => {
+      aktivId = k.id;
+      store = k;
+      try { sessionStorage.setItem(WER_KEY, k.id); } catch (e) { /* Dann fragt die Seite beim nächsten Öffnen wieder. */ }
+      if (location.hash === '#wer') location.hash = 'riff'; else route();
+    };
+    app.querySelector('.wer-liste')?.addEventListener('click', e => {
+      const b = e.target.closest('[data-kind]');
+      const k = b && kinder.find(x => x.id === b.dataset.kind);
+      if (k) waehlen(k);
+    });
+    document.getElementById('wer-neu').addEventListener('submit', e => {
+      e.preventDefault();
+      const name = document.getElementById('vorname').value.trim();
+      const meldung = document.getElementById('wer-meldung');
+      if (!name) { meldung.textContent = 'Schreib bitte zuerst deinen Vornamen auf.'; return; }
+      if (kinder.some(k => k.name.toLowerCase() === name.toLowerCase())) {
+        meldung.textContent = `${name} gibt es schon. Tippe oben auf den Namen. Heißt ein anderes Kind genauso? Dann schreib zum Beispiel ${name} B.`;
+        return;
+      }
+      const k = Object.assign(leererSpeicher(), { id: `k${Date.now()}`, name });
+      kinder.push(k);
+      kinderSichern();
+      waehlen(k);
+    });
+  }
+
   function ansichtRiff() {
     const gruss = store.name ? `Hallo, ${esc(store.name)}! Ich bin Kora.` : 'Hallo! Ich bin Kora.';
     app.innerHTML = `
@@ -212,7 +267,7 @@ Beginne mit einer kurzen Begrüßung und frag, wobei du helfen kannst.`;
       <div class="blase">
         <h1 id="gruss">${gruss}</h1>
         <p>Komm mit ins Korallenriff! Hier findest du selbst heraus, wie Computer lernen. Such dir etwas aus, probier es aus, so lange du magst, und räum es danach wieder auf.</p>
-        <div class="name-zeile"><label for="vorname">Wie heißt du?</label><input id="vorname" type="text" maxlength="20" placeholder="dein Vorname" autocomplete="off" value="${esc(store.name)}"><span class="leise">Bleibt nur auf diesem Gerät.</span></div>
+        ${store.name ? `<p class="leise">Du bist nicht ${esc(store.name)}? <a href="#wer">Kind wechseln</a></p>` : ''}
       </div>
     </section>
 
@@ -255,12 +310,6 @@ Beginne mit einer kurzen Begrüßung und frag, wobei du helfen kannst.`;
       </details>
     </div>`;
 
-    const feld = document.getElementById('vorname');
-    feld.addEventListener('input', () => {
-      store.name = feld.value.trim();
-      save();
-      document.getElementById('gruss').textContent = store.name ? `Hallo, ${store.name}! Ich bin Kora.` : 'Hallo! Ich bin Kora.';
-    });
     const wahl = document.getElementById('prompt-modul');
     const text = document.getElementById('prompt-text');
     const status = document.getElementById('kopier-status');
@@ -367,14 +416,17 @@ Beginne mit einer kurzen Begrüßung und frag, wobei du helfen kannst.`;
     start();
     box.addEventListener('click', e => {
       if (e.target.id === 'reset-start') {
-        box.innerHTML = `<strong>Wirklich alles löschen?</strong> <button type="button" class="knopf" id="reset-ja">Ja, alles löschen</button> <button type="button" class="knopf leise-knopf" id="reset-nein">Nein, behalten</button>`;
+        box.innerHTML = `<strong>Wirklich dein ganzes Riff und deine Einträge löschen?</strong> Die Riffe der anderen Kinder bleiben. <button type="button" class="knopf" id="reset-ja">Ja, alles löschen</button> <button type="button" class="knopf leise-knopf" id="reset-nein">Nein, behalten</button>`;
         document.getElementById('reset-nein').focus();
       } else if (e.target.id === 'reset-nein') {
         start();
       } else if (e.target.id === 'reset-ja') {
         uhr = null;
+        kinder = kinder.filter(k => k !== store);
         store = leererSpeicher();
-        try { localStorage.removeItem(KEY); } catch (err) { /* Nichts weiter zu tun */ }
+        aktivId = null;
+        kinderSichern();
+        try { sessionStorage.removeItem(WER_KEY); } catch (err) { /* Nichts weiter zu tun */ }
         location.hash = 'riff';
       }
     });
@@ -656,24 +708,46 @@ Beginne mit einer kurzen Begrüßung und frag, wobei du helfen kannst.`;
     const cv = box.querySelector('canvas'), ctx = cv.getContext('2d'), knopf = box.querySelector('#film-start'), stelle = box.querySelector('#film-stelle'), zeit = box.querySelector('#film-zeit'), tonKnopf = box.querySelector('#film-ton');
     const au = new Audio();
     au.preload = 'auto';
-    let t = 2.2, laeuft = false, zuletzt = 0, raf = 0, geladen = -1, tonOk = true, wartetSeit = 0, ziel = null;
-    au.addEventListener('error', () => { if (au.getAttribute('src')) tonOk = false; });
-    au.addEventListener('loadedmetadata', () => { if (ziel !== null) { au.currentTime = ziel; ziel = null; } });
+    let t = 2.2, laeuft = false, zuletzt = 0, raf = 0, geladen = -1, quelle = -1, tonOk = true, gesperrt = false, wartetSeit = 0, ziel = null, versuch = 0, ziehen = false, ziehUhr = 0;
+    const tonAnzeigen = () => {
+      tonKnopf.setAttribute('aria-pressed', String(!au.muted && !gesperrt));
+      tonKnopf.textContent = gesperrt ? 'Ton antippen' : au.muted ? 'Ton aus' : 'Ton an';
+    };
+    au.addEventListener('error', () => { if (au.getAttribute('src')) { quelle = -1; tonOk = false; } });
+    au.addEventListener('loadedmetadata', () => { if (ziel !== null) { try { au.currentTime = ziel; } catch (e) { /* Der Film läuft trotzdem weiter. */ } ziel = null; } });
+    /* Kommt der Ton nach langem Laden doch noch an, steigt er an der aktuellen Stelle wieder ein. */
+    au.addEventListener('canplay', () => { if (laeuft && !tonOk && !gesperrt && !ziehen) { tonOk = true; wartetSeit = 0; tonStellen(); } });
+    /* Eine überholte oder abgebrochene Anfrage ist kein Tonausfall. Sperrt der Browser den Ton, holt ihn ein Tippen zurück. */
+    const abspielen = () => {
+      const nr = ++versuch;
+      const p = au.play();
+      if (p && p.catch) p.catch(err => {
+        if (nr !== versuch || !laeuft || (err && err.name === 'AbortError')) return;
+        tonOk = false;
+        if (err && err.name === 'NotAllowedError') { gesperrt = true; tonAnzeigen(); }
+      });
+    };
     /* Ton auf die aktuelle Stelle des Films setzen */
     const tonStellen = () => {
       const i = F.szeneBei(t), s = F.SZENEN[i];
-      if (!s.ton || !tonOk) { au.pause(); geladen = i; return; }
+      geladen = i;
+      if (!s.ton || !tonOk || gesperrt) { au.pause(); return; }
       const stelleImTon = s.ton.ab + (t - s.start);
-      if (geladen !== i) { geladen = i; ziel = stelleImTon; au.src = s.ton.datei; au.load(); } else { try { au.currentTime = stelleImTon; } catch (e) { ziel = stelleImTon; } }
-      if (laeuft) { const p = au.play(); if (p && p.catch) p.catch(() => { tonOk = false; }); }
+      if (quelle !== i) { quelle = i; ziel = stelleImTon; au.src = s.ton.datei; au.load(); }
+      else if (au.readyState >= 1) { try { au.currentTime = stelleImTon; } catch (e) { ziel = stelleImTon; } }
+      else ziel = stelleImTon;
+      if (laeuft) abspielen();
     };
+    /* Jeder Neustart durch das Kind versucht es wieder mit Ton. */
+    const tonNeuVersuchen = () => { gesperrt = false; tonOk = true; wartetSeit = 0; tonAnzeigen(); };
     const malen = () => { F.draw(ctx, t); stelle.value = String(Math.round(t / F.DAUER * 1000)); zeit.textContent = `${mmss(t)} / ${mmss(F.DAUER)}`; };
     const schleife = jetzt => {
       if (!cv.isConnected) { laeuft = false; au.pause(); return; }
       const dt = (jetzt - zuletzt) / 1000;
       zuletzt = jetzt;
+      if (ziehen) { raf = requestAnimationFrame(schleife); return; }
       const i = F.szeneBei(t), s = F.SZENEN[i];
-      if (i !== geladen) tonStellen();
+      if (i !== geladen) { if (!gesperrt) tonOk = true; wartetSeit = 0; tonStellen(); }
       if (s.ton && tonOk) {
         if (au.readyState >= 2 && !au.seeking && !au.paused) {
           wartetSeit = 0;
@@ -681,7 +755,7 @@ Beginne mit einer kurzen Begrüßung und frag, wobei du helfen kannst.`;
           if (t >= s.start + s.dauer - 0.02) t = s.start + s.dauer + 0.001;
         } else {
           wartetSeit += dt;
-          if (wartetSeit > 3) tonOk = false;
+          if (wartetSeit > 3) { tonOk = false; au.pause(); }
         }
       } else t += dt;
       if (t >= F.DAUER) { t = F.DAUER - 0.01; laeuft = false; au.pause(); knopf.textContent = '↺ Noch einmal'; }
@@ -691,26 +765,49 @@ Beginne mit einer kurzen Begrüßung und frag, wobei du helfen kannst.`;
     const spielen = () => {
       if (t >= F.DAUER - 0.05) t = 0;
       laeuft = true;
-      wartetSeit = 0;
+      tonNeuVersuchen();
       knopf.textContent = '❚❚ Pause';
       zuletzt = performance.now();
       tonStellen();
       raf = requestAnimationFrame(schleife);
     };
-    const pause = () => { laeuft = false; cancelAnimationFrame(raf); au.pause(); knopf.textContent = '▶ Weiter'; };
+    const ziehenEnde = () => { clearTimeout(ziehUhr); ziehen = false; };
+    const pause = () => { laeuft = false; ziehenEnde(); cancelAnimationFrame(raf); au.pause(); knopf.textContent = '▶ Weiter'; };
     knopf.addEventListener('click', () => (laeuft ? pause() : spielen()));
     tonKnopf.addEventListener('click', () => {
+      if (gesperrt || (laeuft && !tonOk)) {
+        au.muted = false;
+        tonNeuVersuchen();
+        tonStellen();
+        return;
+      }
       au.muted = !au.muted;
-      tonKnopf.setAttribute('aria-pressed', String(!au.muted));
-      tonKnopf.textContent = au.muted ? 'Ton aus' : 'Ton an';
+      tonAnzeigen();
     });
-    stelle.addEventListener('input', () => { t = stelle.value / 1000 * F.DAUER; malen(); if (laeuft) tonStellen(); });
+    /* Beim Ziehen am Regler schweigt der Ton. Erst wenn der Finger ruht, wird die neue Stelle geladen. */
+    const ziehenFertig = () => {
+      if (!ziehen) return;
+      ziehenEnde();
+      tonNeuVersuchen();
+      zuletzt = performance.now();
+      tonStellen();
+    };
+    stelle.addEventListener('input', () => {
+      t = stelle.value / 1000 * F.DAUER;
+      malen();
+      if (!laeuft) return;
+      ziehen = true;
+      au.pause();
+      clearTimeout(ziehUhr);
+      ziehUhr = setTimeout(ziehenFertig, 250);
+    });
+    stelle.addEventListener('change', ziehenFertig);
     box.querySelector('.film-kapitel').addEventListener('click', e => {
       const b = e.target.closest('[data-kapitel]');
       if (!b) return;
       t = F.SZENEN[+b.dataset.kapitel].start;
       malen();
-      if (laeuft) tonStellen(); else spielen();
+      if (laeuft) { ziehenEnde(); tonNeuVersuchen(); zuletzt = performance.now(); tonStellen(); } else spielen();
     });
     malen();
     const nachLaden = () => { if (!laeuft && cv.isConnected) malen(); };
@@ -719,7 +816,7 @@ Beginne mit einer kurzen Begrüßung und frag, wobei du helfen kannst.`;
     bild.onload = nachLaden;
     bild.src = 'bilder/kora.png';
     F.bilderLaden(nachLaden);
-    filmStopp = () => { laeuft = false; cancelAnimationFrame(raf); au.pause(); };
+    filmStopp = () => { laeuft = false; ziehenEnde(); cancelAnimationFrame(raf); au.pause(); };
   }
 
   function ansichtErzaehlung() {
@@ -766,19 +863,22 @@ Beginne mit einer kurzen Begrüßung und frag, wobei du helfen kannst.`;
     const station = PER_ID[ziel];
     const modulSeite = R.module.find(m => m.id === ziel);
     const aufHeft = ziel === 'heft';
+    const aufWer = !istVorschau && (ziel === 'wer' || !aktivId);
     uhrStoppen();
     wartendeUhr = null;
     kora.leeren();
     if (filmStopp) { filmStopp(); filmStopp = null; }
     document.getElementById('einblendung').innerHTML = '';
-    if (ziel === 'modul0') uhrStarten(R.erzaehlung.id);
+    if (aufWer) { /* Solange kein Kind gewählt ist, läuft keine Uhr. */ }
+    else if (ziel === 'modul0') uhrStarten(R.erzaehlung.id);
     else if (station) uhrStarten(station.id);
     else if (modulSeite) uhrStarten(modulSeite.id);
     document.querySelectorAll('[data-nav]').forEach(a => {
-      const aktiv = a.dataset.nav === (aufHeft ? 'heft' : 'riff');
+      const aktiv = a.dataset.nav === (aufWer ? 'wer' : aufHeft ? 'heft' : 'riff');
       if (aktiv) a.setAttribute('aria-current', 'page'); else a.removeAttribute('aria-current');
     });
-    if (aufHeft) ansichtHeft();
+    if (aufWer) ansichtWer();
+    else if (aufHeft) ansichtHeft();
     else if (ziel === 'modul0') ansichtErzaehlung();
     else if (station && R.inhalte[station.id]) {
       ansichtStation(station, R.module.find(m => m.stationen.includes(station)));
