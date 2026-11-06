@@ -329,7 +329,7 @@ Beginne mit einer kurzen Begrüßung und frag, wobei du helfen kannst.`;
     app.innerHTML = `
     <section class="hallo klein">
       <img class="hallo-kora" src="bilder/kora.png" alt="" width="200" height="200">
-      <div class="blase"><h1>Mein Tauchbuch${store.name ? ` von ${esc(store.name)}` : ''}</h1><p>Hier siehst du, was du schon entdeckt hast. Es gibt keine Punkte. Dein Riff wächst mit jedem Material, das du fertig machst.</p></div>
+      <div class="blase"><h1>Mein Tauchbuch${store.name ? ` von ${esc(store.name)}` : ''}</h1><p>Hier siehst du, was du schon entdeckt hast. Es gibt keine Punkte. Dein Riff wächst mit jedem Material, das du fertig machst.</p>${istVorschau || !store.name ? '' : '<div class="name-aendern" id="name-aendern"></div>'}</div>
     </section>
     <h2 class="abschnitt">Mein Riff</h2>
     ${riffBlock()}
@@ -355,6 +355,7 @@ Beginne mit einer kurzen Begrüßung und frag, wobei du helfen kannst.`;
     </section>`;
     resetEinrichten();
     urkundeEinrichten();
+    nameEinrichten();
     const knopf = document.getElementById('eintraege-kopieren');
     if (knopf) knopf.addEventListener('click', () => kopieren(eintragPunkte().map(e => `${e.titel}\n${e.text}`).join('\n\n'), document.getElementById('eintraege-status'), document.getElementById('eintraege-feld')));
   }
@@ -482,6 +483,42 @@ Beginne mit einer kurzen Begrüßung und frag, wobei du helfen kannst.`;
         status.textContent = 'Geschickt! Super gemacht.';
       } catch (err) {
         status.textContent = err && err.name === 'AbortError' ? 'Nicht geschickt. Du kannst es noch einmal versuchen.' : 'Teilen hat nicht geklappt. Tippe auf „Ansehen“ und speichere die Datei.';
+      }
+    });
+  }
+
+  /* Name ändern, zum Beispiel nach einem Tippfehler. Nur der Name ändert sich, das Riff bleibt. */
+  function nameEinrichten() {
+    const box = document.getElementById('name-aendern');
+    if (!box) return;
+    const start = (meldung = '') => {
+      box.innerHTML = `<button type="button" class="knopf leise-knopf klein-knopf" id="name-start">Name ändern</button>${meldung ? `<span class="leise" role="status">${meldung}</span>` : ''}`;
+    };
+    start();
+    box.addEventListener('click', e => {
+      if (e.target.id === 'name-start') {
+        box.innerHTML = `<form class="name-zeile" id="name-form"><label for="name-neu">Dein Vorname</label><input id="name-neu" type="text" maxlength="20" autocomplete="off" value="${esc(store.name)}"><button type="submit" class="knopf">Speichern</button><button type="button" class="knopf leise-knopf" id="name-nein">Abbrechen</button><span class="leise" id="name-meldung" role="status"></span></form>`;
+        const feld = document.getElementById('name-neu');
+        feld.focus();
+        feld.select();
+        document.getElementById('name-form').addEventListener('submit', ev => {
+          ev.preventDefault();
+          const name = feld.value.trim();
+          const meldung = document.getElementById('name-meldung');
+          if (!name) { meldung.textContent = 'Schreib bitte deinen Vornamen auf.'; return; }
+          if (name === store.name) { start(); return; }
+          if (kinder.some(k => k !== store && k.name.toLowerCase() === name.toLowerCase())) {
+            meldung.textContent = `${name} gibt es auf diesem Gerät schon. Schreib zum Beispiel ${name} B.`;
+            return;
+          }
+          store.name = name;
+          kinderSichern();
+          ansichtHeft();
+          const neu = document.getElementById('name-aendern');
+          if (neu) neu.querySelector('#name-start').insertAdjacentHTML('afterend', '<span class="leise" role="status">Gespeichert!</span>');
+        });
+      } else if (e.target.id === 'name-nein') {
+        start();
       }
     });
   }
