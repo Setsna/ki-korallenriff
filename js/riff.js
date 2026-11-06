@@ -348,6 +348,7 @@ Beginne mit einer kurzen Begrüßung und frag, wobei du helfen kannst.`;
           <li>4 Modul-Abschlüsse: je ca. 5 Min.</li>
         </ul>
         <p>Zusammen ca. ${summe} Minuten reine Arbeitszeit, ohne die Aufgaben „Am Tisch“. Gut planbar sind 3 bis 4 Unterrichtsstunden. Die Kinder wählen frei; die empfohlene Reihenfolge steht auf der Startseite bei jeder Station („erst: …“), gesperrt wird nichts. Eine sinnvolle Abfolge: Modul 0, dann „Regel oder Beispiel?“, danach die Module in ihrer Reihenfolge.</p>
+        <p><b>Tipp für iPads:</b> Die Seite in Safari öffnen, auf „Teilen“ tippen und „Zum Home-Bildschirm“ wählen. Dann startet das Riff wie eine App mit Kora als Symbol, und Safari löscht den Stand nicht, wenn die Seite länger nicht geöffnet wurde. Wichtig: Die App auf dem Home-Bildschirm hat einen eigenen Speicher. Ein in Safari begonnenes Riff ist dort nicht zu sehen. Am besten richten die Kinder das Symbol gleich am Anfang ein und starten danach immer darüber.</p>
 
         <h3>Material für „Am Tisch“</h3>
         <ul class="lehrkraft-material">${zeilen.map(s => `<li><b>${esc(s.titel)}:</b> ${esc(B[s.id].material)}</li>`).join('')}</ul>
