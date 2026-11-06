@@ -192,6 +192,10 @@ textarea { display: block; width: 100%; margin-top: 10px; padding: 10px; font: .
 .eintrag-kopf { font-size: .9rem; font-weight: 800; }
 .eintrag-text { margin-top: 4px; white-space: pre-wrap; overflow-wrap: anywhere; }
 
+.urkunde-teil { background: color-mix(in srgb, var(--farbe) 16%, var(--papier)); }
+.urkunde-frage { margin: 10px 0 6px; font-weight: 700; }
+.urkunde-zeile { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin-top: 12px; }
+.urkunde-zeile[hidden] { display: none; }
 .neu-anfangen { background: color-mix(in srgb, var(--papier) 65%, transparent); border: 2px solid var(--rand-leise); }
 .neu-anfangen h2 { font-size: 1.1rem; color: var(--leise); }
 .reset-zeile { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin-top: 10px; }
