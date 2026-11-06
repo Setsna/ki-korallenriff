@@ -347,11 +347,14 @@ Beginne mit einer kurzen Begrüßung und frag, wobei du helfen kannst.`;
 
     <section class="heft-teil"><h2>Meine Einträge</h2>${eintragListe()}</section>
 
+    <section class="heft-teil urkunde-teil meer" id="urkunde"><h2>Meine Urkunde</h2>${urkundeBlock()}</section>
+
     <section class="heft-teil neu-anfangen"><h2>Neu anfangen</h2>
       <p class="leise">Löscht dein Riff, deine Stempel, deine Lernzeit und alle Einträge auf diesem Gerät.</p>
       <div id="reset" class="reset-zeile"></div>
     </section>`;
     resetEinrichten();
+    urkundeEinrichten();
     const knopf = document.getElementById('eintraege-kopieren');
     if (knopf) knopf.addEventListener('click', () => kopieren(eintragPunkte().map(e => `${e.titel}\n${e.text}`).join('\n\n'), document.getElementById('eintraege-status'), document.getElementById('eintraege-feld')));
   }
@@ -412,6 +415,75 @@ Beginne mit einer kurzen Begrüßung und frag, wobei du helfen kannst.`;
     if (!liste.length) return '<p class="leise">Noch keine Einträge. Am Ende jeder Station schreibst du auf, was du entdeckt hast.</p>';
     return `<ul class="eintraege">${liste.map(e => `<li class="${e.farbe}"><span class="eintrag-kopf"><span aria-hidden="true">${e.icon}</span> ${esc(e.titel)}${e.t ? ` · ${datum(e.t)}` : ''}</span><p class="eintrag-text">${esc(e.text)}</p></li>`).join('')}</ul>
       <p class="kopier-zeile"><button type="button" class="knopf leise-knopf" id="eintraege-kopieren">Alles kopieren</button><span class="leise" id="eintraege-status" aria-live="polite"></span><textarea id="eintraege-feld" rows="6" readonly hidden aria-label="Alle Einträge">${esc(liste.map(e => `${e.titel}\n${e.text}`).join('\n\n'))}</textarea></p>`;
+  }
+
+  /* Urkunde und Tauchbuch-Blatt: erst wenn alle 9 Stationen geschafft sind.
+     Das PDF entsteht auf dem Gerät. Teilen geht in einem zweiten Tippen, weil Safari
+     das Teilen-Menü nur direkt nach einem Tippen öffnet. */
+  const alleStationen = () => R.module.flatMap(m => m.stationen);
+  function urkundeBlock() {
+    const offen = alleStationen().filter(s => !fertig(s.id)).length;
+    if (offen) return `<p class="leise">Wenn du alle 9 Stationen geschafft hast, bekommst du hier deine Urkunde. Noch ${offen === 1 ? '1 Station' : `${offen} Stationen`}.</p>`;
+    return `<p>Du hast alle 9 Stationen geschafft! Mach dir deine Urkunde und schick sie an Herrn Hahn.</p>
+      <p class="urkunde-frage" id="urkunde-frage">Auf deiner Urkunde soll stehen:</p>
+      <div class="wahl" role="group" aria-labelledby="urkunde-frage">
+        <button type="button" class="wahl-knopf" data-form="in" aria-pressed="false">KI-Riff-Forscherin</button>
+        <button type="button" class="wahl-knopf" data-form="er" aria-pressed="false">KI-Riff-Forscher</button>
+      </div>
+      <p class="urkunde-zeile"><button type="button" class="knopf" id="urkunde-machen" disabled><span aria-hidden="true">📄 </span>Urkunde machen</button></p>
+      <p class="urkunde-zeile" id="urkunde-fertig" hidden><button type="button" class="knopf" id="urkunde-teilen"><span aria-hidden="true">📤 </span>An Herrn Hahn schicken</button> <a class="knopf leise-knopf" id="urkunde-laden" download>Ansehen</a></p>
+      <p class="leise" id="urkunde-status" role="status"></p>`;
+  }
+  function urkundeEinrichten() {
+    const box = document.getElementById('urkunde');
+    const machen = document.getElementById('urkunde-machen');
+    if (!box || !machen) return;
+    const status = document.getElementById('urkunde-status');
+    const fertigZeile = document.getElementById('urkunde-fertig');
+    let form = null, datei = null, adresse = null;
+    box.querySelectorAll('[data-form]').forEach(k => k.addEventListener('click', () => {
+      form = k.dataset.form;
+      box.querySelectorAll('[data-form]').forEach(x => x.setAttribute('aria-pressed', String(x === k)));
+      machen.disabled = false;
+      fertigZeile.hidden = true;
+      status.textContent = '';
+    }));
+    machen.addEventListener('click', async () => {
+      machen.disabled = true;
+      status.textContent = 'Deine Urkunde wird gemacht …';
+      try {
+        const name = store.name || 'Taucherkind';
+        const kann = [];
+        R.module.forEach(m => m.ziele.forEach((z, i) => { if (store.ziele[`${m.id}-${i}`] === 'kann') kann.push(z.t); }));
+        const stempel = stempelListe().map(s => Object.assign({}, s, { da: fertig(s.id) }));
+        const vorne = await RiffUrkunde.vorderseite({ name, form, module: R.module });
+        const hinten = await RiffUrkunde.rueckseite({ name, stempel, kann, eintraege: eintragPunkte() });
+        const blob = RiffUrkunde.pdfAusSeiten([vorne, hinten]);
+        const dateiname = `Urkunde ${name.replace(/[\/:*?"<>|]/g, '')}.pdf`;
+        datei = new File([blob], dateiname, { type: 'application/pdf' });
+        if (adresse) URL.revokeObjectURL(adresse);
+        adresse = URL.createObjectURL(blob);
+        const laden = document.getElementById('urkunde-laden');
+        laden.href = adresse;
+        laden.download = dateiname;
+        fertigZeile.hidden = false;
+        const teilenGeht = navigator.canShare && navigator.canShare({ files: [datei] });
+        document.getElementById('urkunde-teilen').hidden = !teilenGeht;
+        status.textContent = teilenGeht ? 'Fertig! Tippe auf „An Herrn Hahn schicken“ und wähle AirDrop.' : 'Fertig! Dieses Gerät kann nicht teilen. Tippe auf „Ansehen“ und speichere die Datei.';
+      } catch (err) {
+        status.textContent = 'Das hat leider nicht geklappt. Versuch es bitte noch einmal.';
+      }
+      machen.disabled = false;
+    });
+    document.getElementById('urkunde-teilen').addEventListener('click', async () => {
+      if (!datei) return;
+      try {
+        await navigator.share({ files: [datei], title: 'Meine Urkunde' });
+        status.textContent = 'Geschickt! Super gemacht.';
+      } catch (err) {
+        status.textContent = err && err.name === 'AbortError' ? 'Nicht geschickt. Du kannst es noch einmal versuchen.' : 'Teilen hat nicht geklappt. Tippe auf „Ansehen“ und speichere die Datei.';
+      }
+    });
   }
 
   function resetEinrichten() {

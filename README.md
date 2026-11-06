@@ -16,8 +16,10 @@ Es gibt keine Punkte und keinen Zeitdruck: Mit jeder fertigen Station wächst ei
 | `js/riff-inhalte.js` | Texte der Stationen und Modul-Abschlüsse, dazu die Kinderfragen |
 | `js/riff-spiele.js` | Die Mini-Spiele der Stationen |
 | `js/riff-film.js` | Szenen, Sprechtext, Satzzeiten, Bewegungen und Zeitleiste von Modul 0 |
+| `js/riff-urkunde.js` | Urkunde und Tauchbuch-Blatt: zeichnet beide Seiten und baut daraus ein PDF, ohne Bibliothek |
 | `css/riff.css` | Das gesamte Aussehen, auch der Dunkelmodus |
 | `bilder/kora.png` | Kora |
+| `bilder/urkunde.jpg` | Hintergrund von Urkunde und Tauchbuch-Blatt (Canva) |
 | `bilder/film/` | Die zwölf Szenenbilder des Films |
 | `audio/` | Die zwölf eingesprochenen Tonspuren des Films |
 | `schriften/` | Selbst gehostete Schriften mit ihren Lizenzen |
@@ -77,7 +79,7 @@ Die Seite setzt keine Cookies und lädt nichts von fremden Servern nach, auch di
 ## Nach einer Änderung: Versionsnummer hochzählen
 
 Browser merken sich `js` und `css` eine Weile und liefern sonst die alte Fassung aus.
-Deshalb hängt hinter jeder lokalen `js`- und `css`-Datei in `index.html`, `impressum.html` und `datenschutz.html` ein `?v=9`.
+Deshalb hängt hinter jeder lokalen `js`- und `css`-Datei in `index.html`, `impressum.html` und `datenschutz.html` ein `?v=10`.
 **Wer etwas an `js` oder `css` ändert, zählt diese Zahl in allen drei Dateien um eins hoch.**
 Dann laden die Geräte beim nächsten Öffnen der Seite die neue Fassung.
 
