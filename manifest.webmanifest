@@ -1,0 +1,16 @@
+{
+  "name": "Tauchgang im KI-Korallenriff",
+  "short_name": "Korallenriff",
+  "description": "Lernseite für Klasse 3 und 4: Finde heraus, wie Computer lernen.",
+  "lang": "de",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#E8F7FB",
+  "theme_color": "#5AB2E8",
+  "icons": [
+    { "src": "bilder/app-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "bilder/app-512.png", "sizes": "512x512", "type": "image/png" },
+    { "src": "bilder/app-512-maskable.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}
