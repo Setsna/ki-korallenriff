@@ -64,5 +64,22 @@ window.RIFF = {
     ['Dreistufenlektion', 'Neue Wörter: Anschauen, Zeigen, Sagen'],
     ['Hilfe zur Selbsthilfe', 'Kora gibt gestufte Tipps statt Lösungen, ganz ohne KI-Dienst'],
     ['Selbsteinschätzung', '„Ich weiß …“-Sätze und eine Übertragungsaufgabe je Modul; Lernzeit nur zur Selbstbeobachtung im Tauchbuch']
-  ]
+  ],
+
+  /* Für Lehrkräfte: Bezug jeder Station zum OECD/EU-Rahmen „Lernende für das KI-Zeitalter befähigen“ (2026).
+     Seiten = gedruckte Seitenzahlen der Veröffentlichung. Die Zuordnung ist eine eigene fachliche Einschätzung. */
+  lehrkraft: {
+    bezug: {
+      erz: { kompetenz: 'Haltung „Neugierig“ (S. 24)', wissen: '1.4: Es gibt viele Arten von KI-Systemen (S. 19)', material: 'Kassenrolle (fast 2 m), Lineal, Stifte' },
+      a1: { kompetenz: 'Mit KI bewusst umgehen 2: KI ist ein nichtmenschliches Werkzeug, das aus Datenmustern Ergebnisse liefert (S. 28)', wissen: '1.1, 1.2: Algorithmen, Muster, Lernen aus Trainingsdaten (S. 19)', material: 'Papier, Stift' },
+      a2: { kompetenz: 'Fähigkeit „Informatisches Denken“: Mustererkennung, Abstraktion (S. 22)', wissen: '1.1: Daten verarbeiten, Muster erkennen (S. 19)', material: 'drei Früchte, Küchenwaage, Lineal, Karopapier' },
+      b1: { kompetenz: 'Fähigkeit „Informatisches Denken“ (S. 22)', wissen: '2.4: Training durch Versuch und Irrtum mit Rückmeldung (S. 20)', material: 'große und kleine Knöpfe, ein Faden' },
+      b2: { kompetenz: 'Mit KI bewusst umgehen 6: erklären, wie KI Verzerrungen verstärken kann (S. 30)', wissen: '2.4, 2.5: Menschen wählen die Daten aus, KI übernimmt Verzerrungen (S. 20)', material: 'Papier, rote Stifte' },
+      c1: { kompetenz: 'Mit KI bewusst umgehen 2 (S. 28)', wissen: '1.3: Generative KI nutzt Wahrscheinlichkeiten, ohne echtes Verständnis (S. 19)', material: 'Bilderbuch, Kärtchen' },
+      c2: { kompetenz: 'Fähigkeit „Informatisches Denken“: Zerlegung (S. 22)', wissen: '1.1 (S. 19)', material: 'Papierstreifen, Schere' },
+      c3: { kompetenz: 'Mit KI bewusst umgehen 3: bewerten, ob KI-Ergebnisse angenommen, überarbeitet oder abgelehnt werden; grundlegend: verstehen, warum man sie überprüft (S. 29)', wissen: '3.2: Überzeugende Texte, Fakt und Erfindung schwer zu unterscheiden („Halluzinationen“) (S. 20)', material: 'ein Gerät mit Chatbot, nur gemeinsam mit einem Erwachsenen' },
+      d1: { kompetenz: 'KI gezielt einsetzen 3: ein Problem aufschlüsseln (S. 39); „Informatisches Denken“: Ziele so beschreiben, dass KI sie verarbeiten kann (S. 22)', wissen: '3.3: Gleiche Eingabe, verschiedene Ausgaben (S. 20)', material: 'Papier, Buntstifte, ein Partnerkind' },
+      d2: { kompetenz: 'Fähigkeit „Zusammenarbeit“: wissen, welche Informationen man mit KI teilt und welche nicht (S. 21)', wissen: '2.3: KI-Systeme erfassen Daten aus Interaktionen (S. 20)', material: 'Plakatpapier, Stifte' }
+    }
+  }
 };

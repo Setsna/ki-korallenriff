@@ -150,6 +150,13 @@ a.karte:hover, .bereit-karte:hover, .modul0:hover { transform: translateY(-2px);
 .erwachsene summary { font-weight: 700; color: var(--leise); cursor: pointer; }
 .erwachsene p { margin-top: 10px; }
 .tabelle-scroll { margin-top: 12px; overflow-x: auto; }
+.lehrkraft h3 { margin: 18px 0 4px; font-size: 1.1rem; }
+.lehrkraft ul { margin: 6px 0 0; padding-left: 1.3em; }
+.lehrkraft li + li { margin-top: 4px; }
+.lehrkraft-tabelle { min-width: 620px; font-size: .95rem; }
+.lehrkraft-tabelle th[scope="row"] { min-width: 9em; font-weight: 700; }
+.lehrkraft-quellen a { overflow-wrap: anywhere; }
+.lehrkraft-modul { display: block; font-size: .85rem; font-weight: 400; }
 table { width: 100%; min-width: 440px; border-collapse: collapse; background: var(--papier); }
 th, td { padding: 8px 10px; text-align: left; vertical-align: top; border: 1px solid var(--rand-leise); }
 th { background: var(--flaeche); }

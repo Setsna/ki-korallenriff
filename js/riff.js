@@ -314,6 +314,7 @@ Beginne mit einer kurzen Begrüßung und frag, wobei du helfen kannst.`;
         <textarea id="prompt-text" rows="12" readonly aria-label="Vorlagen-Prompt"></textarea>
         <p class="kopier-zeile"><button type="button" class="knopf" id="prompt-kopieren">Prompt kopieren</button> <span class="leise" id="kopier-status" aria-live="polite"></span></p>
       </details>
+      ${lehrkraftBlock()}
     </div>`;
 
     const wahl = document.getElementById('prompt-modul');
@@ -323,6 +324,46 @@ Beginne mit einer kurzen Begrüßung und frag, wobei du helfen kannst.`;
     wahl.addEventListener('change', fuellen);
     fuellen();
     document.getElementById('prompt-kopieren').addEventListener('click', () => kopieren(text.value, status, text));
+  }
+
+  /* Für Lehrkräfte: Ablauf, Zeit, Material und fachlicher Bezug. Inhalte in R.lehrkraft. */
+  function lehrkraftBlock() {
+    const B = R.lehrkraft.bezug;
+    const minuten = s => parseInt(String(s).replace(/\D+/g, ''), 10) || 0;
+    const stationen = R.module.flatMap(m => m.stationen.map(s => Object.assign({ modul: m }, s)));
+    const summe = minuten(R.erzaehlung.dauer) + stationen.reduce((n, s) => n + minuten(s.dauer), 0) + R.module.length * 5;
+    const zeilen = [{ id: 'erz', titel: 'Die Große Erzählung', modul: { nr: 0 } }].concat(stationen);
+    const zeile = s => {
+      const b = B[s.id];
+      return `<tr><th scope="row">${esc(s.titel)}<span class="leise lehrkraft-modul">Modul ${s.modul.nr}</span></th><td>${esc(b.kompetenz)}</td><td>${esc(b.wissen)}</td></tr>`;
+    };
+    return `<details class="erwachsene lehrkraft"><summary>Für Lehrkräfte: Einsatz im Unterricht und fachlicher Bezug</summary>
+        <h3>Kurz gesagt</h3>
+        <p>Die Kinder lernen in 9 Stationen, wie Künstliche Intelligenz funktioniert, ohne selbst eine KI zu benutzen. Die Seite enthält keine KI, braucht kein Konto und speichert alles nur im Browser des Geräts.</p>
+
+        <h3>Ablauf und Zeitbedarf</h3>
+        <ul>
+          <li>Modul 0, der Film „Die Große Erzählung“: ${esc(R.erzaehlung.dauer)}</li>
+          <li>9 Stationen in 4 Modulen: je ca. 10 Min.</li>
+          <li>4 Modul-Abschlüsse: je ca. 5 Min.</li>
+        </ul>
+        <p>Zusammen ca. ${summe} Minuten reine Arbeitszeit, ohne die Aufgaben „Am Tisch“. Gut planbar sind 3 bis 4 Unterrichtsstunden. Die Kinder wählen frei; die empfohlene Reihenfolge steht auf der Startseite bei jeder Station („erst: …“), gesperrt wird nichts. Eine sinnvolle Abfolge: Modul 0, dann „Regel oder Beispiel?“, danach die Module in ihrer Reihenfolge.</p>
+
+        <h3>Material für „Am Tisch“</h3>
+        <ul class="lehrkraft-material">${zeilen.map(s => `<li><b>${esc(s.titel)}:</b> ${esc(B[s.id].material)}</li>`).join('')}</ul>
+        <p>Bei „Klingt richtig“ fragt das Kind mit einem Erwachsenen einen echten Chatbot. Dabei keine Namen und keine Angaben zur Klasse oder zu einzelnen Kindern eingeben und nur ein Werkzeug nutzen, das die Schule erlaubt (vgl. Handlungsleitfaden Mecklenburg-Vorpommern, S. 20). Es ist sinnvoll, die Eltern vorher zu informieren (ebd.).</p>
+
+        <h3>Fachlicher Bezug</h3>
+        <p>Im Thüringer Lehrplan für die Grundschule ist KI bisher kein eigenes Thema. Als Bezug dient deshalb der KI-Kompetenzrahmen von OECD und Europäischer Kommission für die Primar- und Sekundarstufe (2026). Er beschreibt vier Kompetenzbereiche („Mit KI bewusst umgehen“, „KI kreativ anwenden“, „KI gezielt einsetzen“, „KI aktiv mitgestalten“) sowie Wissen, Fähigkeiten und Haltungen. Seine Stufen „grundlegend“, „fortgeschritten“ und „vertieft“ sind ausdrücklich keinen Klassenstufen zugeordnet (S. 25). Das Korallenriff zielt auf die grundlegende Stufe, vor allem im Bereich „Mit KI bewusst umgehen“.</p>
+        <p class="leise">Die Zuordnung der Stationen ist eine eigene fachliche Einschätzung. Seitenangaben beziehen sich auf die gedruckten Seitenzahlen der deutschen Fassung.</p>
+        <div class="tabelle-scroll"><table class="lehrkraft-tabelle"><thead><tr><th scope="col">Station</th><th scope="col">Kompetenz im OECD/EU-Rahmen</th><th scope="col">Wissen</th></tr></thead><tbody>${zeilen.map(zeile).join('')}</tbody></table></div>
+
+        <h3>Quellen</h3>
+        <ul class="lehrkraft-quellen">
+          <li>OECD / Europäische Union (2026): <i>Lernende für das KI-Zeitalter befähigen. Ein KI-Kompetenzrahmen für die Primar- und Sekundarstufe.</i> Original: <i>Empowering learners for the age of AI: An AI literacy framework for primary and secondary education.</i> OECD Publishing, Paris. <a href="https://doi.org/10.1787/65cd27d4-en" rel="noopener">doi.org/10.1787/65cd27d4-en</a>, Lizenz CC BY 4.0.</li>
+          <li>Ministerium für Bildung und Kindertagesförderung Mecklenburg-Vorpommern (Dezember 2023): <i>Gemeinsam die Welt der generativen KI-Systeme erkunden.</i> Handlungsleitfaden.</li>
+        </ul>
+      </details>`;
   }
 
   function ansichtHeft() {
