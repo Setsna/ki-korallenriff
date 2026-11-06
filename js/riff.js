@@ -80,6 +80,7 @@
   };
   const uhrStarten = id => { uhrStoppen(); uhr = { id, start: Date.now() }; };
   let wartendeUhr = null;
+  let neuImRiff = null; /* Station, Modul oder Film, das gerade zum ersten Mal fertig wurde (siehe einblenden) */
   document.addEventListener('visibilitychange', () => {
     if (document.hidden) { wartendeUhr = uhr && uhr.id; uhrStoppen(); }
     else if (wartendeUhr) { uhrStarten(wartendeUhr); wartendeUhr = null; }
@@ -120,36 +121,62 @@
   ];
   const halm = (dx, h, c) => `<path class="halm" d="M${dx} 0C${dx - 8} ${-h * .35} ${dx + 8} ${-h * .65} ${dx + 1} ${-h}" fill="none" stroke="${c}" stroke-width="6" stroke-linecap="round"/>`;
 
+  /* Kleiner Fischschwarm: reine Deko, kommt mit den Korallen (ab 3, 6 und 9). */
+  const fisch = (x, y, c) => `<g transform="translate(${x} ${y})"><path d="M0 0C6 -7 17 -7 22 0C17 7 6 7 0 0Z" fill="${c}"/><path d="M20 0L29 -7V7Z" fill="${c}"/><circle cx="5" cy="-1.5" r="1.6" fill="#17324D"/></g>`;
+  const schwarm = (x, y, c, dauer) => `<g transform="translate(${x} ${y})"><g class="schwarm" style="animation-duration:${dauer}s">${fisch(0, 0, c)}${fisch(30, -14, c)}${fisch(34, 12, c)}${fisch(64, -2, c)}</g></g>`;
+  const SCHWAERME = [
+    { ab: 3, x: 150, y: 150, c: '#FFC94A', dauer: 14 },
+    { ab: 6, x: 560, y: 132, c: '#FF8E7F', dauer: 17 },
+    { ab: 9, x: 250, y: 105, c: '#E2D6FF', dauer: 19 }
+  ];
+
   function riffSVG() {
     const n = korallen();
     const label = `Dein Riff: ${zaehler()}.${fertig('erz') ? ' Die Sonne scheint ins Wasser.' : ''}`;
+    let ziel = null; /* Wohin Kora schwimmt, wenn gerade etwas neu gewachsen ist */
+    const licht = (x, y) => `<circle class="riff-licht" cx="${x}" cy="${y}" r="62" fill="url(#licht)"/>`;
     const korallenSvg = KORALLEN.map((k, i) => {
       const da = fertig(STATIONEN[i].id);
-      return `<g transform="translate(${k.x} ${k.y}) scale(1.35)"><g class="koralle ${da ? 'gewachsen' : 'wartet'}">${FORM[k.form](da ? k.f : '#C4CFD4')}</g></g>`;
+      const neu = da && neuImRiff === STATIONEN[i].id;
+      if (neu) ziel = k;
+      return `${neu ? licht(k.x, k.y - 40) : ''}<g transform="translate(${k.x} ${k.y}) scale(1.6)"><g class="koralle ${da ? 'gewachsen' : 'wartet'}${neu ? ' neu' : ''}">${FORM[k.form](da ? k.f : '#FFFFFF')}</g></g>`;
     }).join('');
     const pflanzenSvg = PFLANZEN.map((p, i) => {
       const da = modulFertig(R.module[i]);
+      const neu = da && neuImRiff === R.module[i].id;
+      if (neu) ziel = { x: p.x + 24, y: p.y };
       const c = da ? '#37A85B' : '#AFC4B6';
-      return `<g transform="translate(${p.x} ${p.y})"><g transform="translate(24 22)"><g class="pflanze ${da ? 'gewachsen' : 'wartet'}">${halm(-9, 80, c)}${halm(0, 96, c)}${halm(9, 74, c)}</g></g><image class="riff-schild" href="bilder/schild.png" x="-42" y="-42" width="84" height="74"/><text class="riff-schild-text" x="0" y="-18" text-anchor="middle">Modul ${i + 1}</text></g>`;
+      return `${neu ? licht(p.x + 24, p.y - 50) : ''}<g transform="translate(${p.x} ${p.y})"><g transform="translate(24 22)"><g class="pflanze ${da ? 'gewachsen' : 'wartet'}${neu ? ' neu' : ''}">${halm(-9, 80, c)}${halm(0, 96, c)}${halm(9, 74, c)}</g></g><image class="riff-schild" href="bilder/schild.png" x="-42" y="-42" width="84" height="74"/><text class="riff-schild-text" x="0" y="-18" text-anchor="middle">Modul ${i + 1}</text></g>`;
     }).join('');
     const sonne = fertig('erz');
-    return `<svg class="riff-bild" viewBox="0 0 940 320" role="img" aria-label="${esc(label)}" data-korallen="${n}">
+    const schwaermeSvg = SCHWAERME.filter(s => n >= s.ab).map(s => schwarm(s.x, s.y, s.c, s.dauer)).join('');
+    /* Kora: sonst schwimmt sie hin und her. Ist etwas neu, schwimmt sie einmal dorthin und bleibt daneben. */
+    const KORA = { x: 400, y: 78, w: 96 };
+    let koraSvg = `<image class="riff-kora" href="bilder/kora.png" x="${KORA.x}" y="${KORA.y}" width="${KORA.w}" height="${KORA.w}"/>`;
+    if (ziel) {
+      const kx = ziel.x < 470 ? ziel.x + 44 : ziel.x - 44 - KORA.w;
+      const ky = Math.max(KORA.y, ziel.y - 175);
+      koraSvg = `<image class="riff-kora kommt" href="bilder/kora.png" x="${kx}" y="${ky}" width="${KORA.w}" height="${KORA.w}" style="--dx:${KORA.x - kx}px;--dy:${KORA.y - ky}px"/>`;
+    }
+    /* Ausschnitt ab y 75: oben ist nur leeres Wasser, so wird das Riff größer. */
+    return `<svg class="riff-bild" viewBox="0 75 940 245" role="img" aria-label="${esc(label)}" data-korallen="${n}">
       <defs>
         <linearGradient id="wasser" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${sonne ? '#7FDDEB' : '#4FB4D8'}"/><stop offset="1" stop-color="${sonne ? '#2C9CC7' : '#1F7CAE'}"/></linearGradient>
         <linearGradient id="sand" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#F6DFA8"/><stop offset="1" stop-color="#E5C07F"/></linearGradient>
         <linearGradient id="strahl" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#FFF8D6" stop-opacity=".45"/><stop offset="1" stop-color="#FFF8D6" stop-opacity="0"/></linearGradient>
+        <radialGradient id="licht"><stop offset="0" stop-color="#FFF8D6" stop-opacity=".95"/><stop offset=".55" stop-color="#FFF8D6" stop-opacity=".45"/><stop offset="1" stop-color="#FFF8D6" stop-opacity="0"/></radialGradient>
       </defs>
       <rect width="940" height="320" fill="url(#wasser)"/>
-      ${sonne ? `<g class="strahlen"><path d="M120 0H190L120 250H20Z" fill="url(#strahl)"/><path d="M360 0H450L420 260H290Z" fill="url(#strahl)"/><path d="M640 0H710L720 250H600Z" fill="url(#strahl)"/><path d="M820 0H890L930 240H820Z" fill="url(#strahl)"/></g>` : ''}
+      ${sonne ? `<g class="strahlen${neuImRiff === 'erz' ? ' neu' : ''}"><path d="M120 0H190L120 250H20Z" fill="url(#strahl)"/><path d="M360 0H450L420 260H290Z" fill="url(#strahl)"/><path d="M640 0H710L720 250H600Z" fill="url(#strahl)"/><path d="M820 0H890L930 240H820Z" fill="url(#strahl)"/></g>` : ''}
       <g class="blasen" fill="rgba(255,255,255,.55)"><circle cx="160" cy="210" r="4"/><circle cx="168" cy="186" r="2.500"/><circle cx="520" cy="200" r="3.500"/><circle cx="514" cy="170" r="2.500"/><circle cx="808" cy="190" r="4"/><circle cx="816" cy="160" r="2.500"/></g>
       <path d="M0 262C150 240 290 268 470 256S770 242 940 262V320H0Z" fill="url(#sand)"/>
       <g fill="#A9B4B8"><ellipse cx="140" cy="303" rx="22" ry="9"/><ellipse cx="395" cy="306" rx="18" ry="8"/><ellipse cx="665" cy="304" rx="24" ry="10"/></g>
-      ${pflanzenSvg}${korallenSvg}
-      ${sonne ? '' : '<g class="sonne-hinweis"><circle cx="860" cy="42" r="20" fill="#FFD866" stroke="#FFF8D6" stroke-width="3"/><text x="860" y="86" text-anchor="middle">Film ansehen: Sonne!</text></g>'}
-      <image class="riff-kora" href="bilder/kora.png" x="400" y="26" width="110" height="110"/>
+      ${schwaermeSvg}${pflanzenSvg}${korallenSvg}
+      ${sonne ? '' : '<g class="sonne-hinweis"><circle cx="896" cy="104" r="20" fill="#FFD866" stroke="#FFF8D6" stroke-width="3"/><text x="866" y="111" text-anchor="end">Film ansehen: Sonne!</text></g>'}
+      ${koraSvg}
     </svg>`;
   }
-  const riffBlock = (knopf = false) => `<div class="riff-rahmen">${riffSVG()}<div class="riff-leiste"><p class="riff-zaehler" id="riff-zaehler">${zaehler()}</p>${knopf ? '<span class="knopf leise-knopf">Tauchbuch öffnen</span>' : ''}</div></div>`;
+  const riffBlock = (knopf = false) => `<div class="riff-rahmen">${riffSVG()}<div class="riff-leiste"><p class="riff-zaehler${neuImRiff ? ' neu' : ''}" id="riff-zaehler">${zaehler()}</p>${knopf ? '<span class="knopf leise-knopf">Tauchbuch öffnen</span>' : ''}</div></div>`;
 
   /* ---------- Symbole für „So arbeitest du hier“ (eigene Zeichnungen) ---------- */
   const STRICH = 'stroke="#17324D" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"';
@@ -665,12 +692,13 @@ Beginne mit einer kurzen Begrüßung und frag, wobei du helfen kannst.`;
     zeichnen();
   }
 
-  /* Einblendung nach „Fertig!“ */
-  function einblenden(inhalt) {
+  /* Einblendung nach „Fertig!“. neu: Id der Station oder des Moduls, das gerade zum ersten Mal
+     fertig wurde. Geht das Kind danach zum Riff, wächst nur dieses Stück sichtbar. */
+  function einblenden(inhalt, neu = null) {
     const root = document.getElementById('einblendung');
     root.innerHTML = `<div class="einblendung" role="dialog" aria-modal="true" aria-label="Geschafft"><div class="einblendung-karte">${inhalt}<p class="einblendung-knoepfe"><button type="button" class="knopf" id="zurueck-riff">Zurück zum Riff</button><a class="knopf leise-knopf" href="#heft">Riff ansehen</a></p></div></div>`;
     const zu = () => { root.innerHTML = ''; };
-    root.querySelector('#zurueck-riff').addEventListener('click', () => { zu(); location.hash = 'riff'; });
+    root.querySelector('#zurueck-riff').addEventListener('click', () => { zu(); neuImRiff = neu; location.hash = 'riff'; });
     root.querySelector('a').addEventListener('click', zu);
     root.querySelector('.einblendung').addEventListener('keydown', e => { if (e.key === 'Escape') zu(); });
     root.querySelector('#zurueck-riff').focus();
@@ -795,7 +823,7 @@ Beginne mit einer kurzen Begrüßung und frag, wobei du helfen kannst.`;
       store.done[s.id] = (store.done[s.id] || 0) + 1;
       if (erstes) store.stempel[s.id] = Date.now();
       save();
-      einblenden(`<span class="stempel gross ${m.farbe}" aria-hidden="true"><span class="stempel-icon">${s.icon}</span><span class="stempel-wort">ENTDECKT</span></span><h2>Gestempelt!</h2><p>${erstes ? 'In deinem Riff wächst eine neue Koralle.' : 'Schön, dass du wiederholt hast.'}</p>`);
+      einblenden(`<span class="stempel gross ${m.farbe}" aria-hidden="true"><span class="stempel-icon">${s.icon}</span><span class="stempel-wort">ENTDECKT</span></span><h2>Gestempelt!</h2><p>${erstes ? 'In deinem Riff wächst eine neue Koralle.' : 'Schön, dass du wiederholt hast.'}</p>`, erstes ? s.id : null);
     });
     document.getElementById('station-prompt-kopieren').addEventListener('click', () => kopieren(prompt, document.getElementById('station-prompt-status'), document.getElementById('station-prompt')));
     kora.setzen({ titel: s.titel, woerter: x.woerter, hilfe: x.hilfe });
@@ -848,7 +876,7 @@ Beginne mit einer kurzen Begrüßung und frag, wobei du helfen kannst.`;
       store.done[m.id] = (store.done[m.id] || 0) + 1;
       if (erstes) store.stempel[m.id] = Date.now();
       save();
-      einblenden(`<span class="stempel gross ${m.farbe}" aria-hidden="true"><span class="stempel-icon">🏁</span><span class="stempel-wort">MODUL ${m.nr}</span></span><h2>Modul ${m.nr} geschafft!</h2><p>${erstes ? 'In deinem Riff wächst jetzt eine Riff-Pflanze.' : 'Du hast das Modul noch einmal abgeschlossen.'}</p>`);
+      einblenden(`<span class="stempel gross ${m.farbe}" aria-hidden="true"><span class="stempel-icon">🏁</span><span class="stempel-wort">MODUL ${m.nr}</span></span><h2>Modul ${m.nr} geschafft!</h2><p>${erstes ? 'In deinem Riff wächst jetzt eine Riff-Pflanze.' : 'Du hast das Modul noch einmal abgeschlossen.'}</p>`, erstes ? m.id : null);
     });
     kora.setzen({ titel: `Modul ${m.nr}: ${m.titel}`, woerter: [], hilfe: R.abschlussHilfe });
   }
@@ -1008,7 +1036,7 @@ Beginne mit einer kurzen Begrüßung und frag, wobei du helfen kannst.`;
       store.done[id] = (store.done[id] || 0) + 1;
       if (erstes) store.stempel[id] = Date.now();
       save();
-      einblenden(`<span class="stempel gross erz" aria-hidden="true"><span class="stempel-icon">🎬</span><span class="stempel-wort">ENTDECKT</span></span><h2>Gestempelt!</h2><p>${erstes ? 'In deinem Riff scheint jetzt die Sonne.' : 'Schön, dass du wiederholt hast.'}</p>`);
+      einblenden(`<span class="stempel gross erz" aria-hidden="true"><span class="stempel-icon">🎬</span><span class="stempel-wort">ENTDECKT</span></span><h2>Gestempelt!</h2><p>${erstes ? 'In deinem Riff scheint jetzt die Sonne.' : 'Schön, dass du wiederholt hast.'}</p>`, erstes ? id : null);
     });
     document.getElementById('station-prompt-kopieren').addEventListener('click', () => kopieren(prompt, document.getElementById('station-prompt-status'), document.getElementById('station-prompt')));
     kora.setzen({ titel: 'Die Große Erzählung', woerter: [], hilfe: E.hilfe });
@@ -1048,7 +1076,9 @@ Beginne mit einer kurzen Begrüßung und frag, wobei du helfen kannst.`;
     } else if (modulSeite) {
       ansichtPlatzhalter(modulSeite.titel, `Modul ${modulSeite.nr} von ${R.module.length} · Abschluss`, 'Hier wird noch gebaut. Bald schaust du hier zurück: Was weißt du jetzt?');
     } else ansichtRiff();
-    window.scrollTo(0, 0);
+    neuImRiff = null;
+    /* Sofort nach oben. Weiches Scrollen (scroll-behavior: smooth) blieb hier sonst mitten in der Seite hängen. */
+    window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
   }
   window.addEventListener('hashchange', route);
   route();
