@@ -22,6 +22,11 @@
   --schrift: "Andika", "Trebuchet MS", "Segoe UI", system-ui, sans-serif;
   --display: "Baloo 2", "Andika", "Trebuchet MS", system-ui, sans-serif;
   --mono: "IBM Plex Mono", Consolas, Menlo, monospace;
+  /* Maße für alle Seiten. Bildschirmgrößen: unter 640px Handy, 640–999px iPad hoch,
+     1000–1599px iPad quer und Laptop, ab 1600px Tafel. */
+  --ziel: 44px;        /* Mindesthöhe für alles, was man antippt */
+  --ziel-gross: 56px;  /* Hauptknöpfe */
+  --breite: 1080px;    /* Inhaltsbreite, für die Tafel ab 1600px kommt in Etappe 5 mehr */
 }
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
@@ -51,7 +56,7 @@ img { display: block; }
 
 /* Kopfzeile */
 .kopf { position: sticky; top: 0; z-index: 10; background: var(--papier); border-bottom: 3px solid var(--linie); }
-.kopf-innen { max-width: 1080px; margin: auto; padding: 6px 16px; display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 6px 14px; }
+.kopf-innen { max-width: var(--breite); margin: auto; padding: 6px 16px; display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 6px 14px; }
 .logo { display: flex; align-items: center; gap: clamp(6px, 1vw, 12px); font-weight: 800; font-size: clamp(1.15rem, 3.5vw, 2.5rem); line-height: 1.1; white-space: nowrap; text-decoration: none; }
 .logo img { flex: none; width: clamp(40px, 4.5vw, 56px); height: auto; }
 .nav { display: flex; gap: 8px; }
@@ -59,7 +64,7 @@ img { display: block; }
 .nav a[aria-current="page"] { color: var(--auf-farbe); background: var(--sonne); }
 .vorschau-hinweis { padding: 6px 16px; text-align: center; font-size: .95rem; font-weight: 700; background: var(--warm); border-bottom: 2px solid var(--linie); }
 
-.seite { max-width: 1080px; margin: auto; padding: 18px 16px 64px; outline: none; }
+.seite { max-width: var(--breite); margin: auto; padding: 18px 16px 64px; outline: none; }
 .abschnitt { margin: 32px 0 12px; font-size: 1.55rem; }
 .leise { color: var(--leise); font-size: .9rem; }
 .dauer { color: var(--leise); font-size: .9rem; }
@@ -430,7 +435,7 @@ textarea { display: block; width: 100%; margin-top: 10px; padding: 10px; font: .
 .fragen { display: grid; gap: 4px; margin: 0 0 10px; padding-left: 1.3em; }
 
 /* Seitenende und Rechtstexte */
-.fuss { max-width: 1080px; margin: -40px auto 0; padding: 0 16px 90px; font-size: .95rem; color: var(--leise); text-align: center; }
+.fuss { max-width: var(--breite); margin: -40px auto 0; padding: 0 16px 90px; font-size: .95rem; color: var(--leise); text-align: center; }
 .rechtstext { max-width: 760px; }
 .rechtstext h1 { font-size: 2.1rem; margin-bottom: 4px; }
 .rechtstext h2 { margin: 26px 0 8px; font-size: 1.35rem; }
@@ -451,6 +456,23 @@ textarea { display: block; width: 100%; margin-top: 10px; padding: 10px; font: .
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation: none !important; scroll-behavior: auto !important; }
 }
+
+/* Touch-Flächen: Alles, was man antippt, ist mindestens --ziel hoch.
+   Nebeneinander liegende Knöpfe haben mindestens 8px Abstand. */
+.knopf { display: inline-flex; align-items: center; justify-content: center; gap: .4em; min-height: var(--ziel); }
+.logo, .nav a, .pfad-modul { display: inline-flex; align-items: center; min-height: 48px; }
+.wahl-knopf { min-height: 48px; }
+.link-knopf { display: inline-flex; align-items: center; min-height: var(--ziel); padding: .3em 1em; font-family: var(--display); font-weight: 700; color: var(--tinte); text-decoration: none; background: var(--papier); border: 2.500px solid var(--linie); border-radius: 999px; }
+.reiter button, .menue button, .film-kapitel button { min-height: var(--ziel); }
+.menue, .film-kapitel { gap: 8px; }
+.kora-kopf button { width: var(--ziel); height: var(--ziel); }
+.kora-knopf { min-height: 52px; }
+summary { padding-block: 12px; }
+.erwachsene { padding-block: 0; }
+.erwachsene[open] { padding-bottom: 12px; }
+select, .name-zeile input, .text-feld { min-height: var(--ziel); }
+input[type="range"] { height: var(--ziel); }
+.fuss a { display: inline-block; padding: 11px 4px; }
 
 /* Handy */
 @media (max-width: 640px) {
