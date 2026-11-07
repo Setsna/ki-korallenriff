@@ -495,12 +495,35 @@ input[type="range"] { height: var(--ziel); }
 .kora-hinweis { font-size: .9rem; }
 body.kora-da #app { padding-bottom: 120px; }
 @media (max-width: 999px) {
-  .kora-fenster { left: 0; right: 0; bottom: 0; width: auto; max-height: 45vh; padding: 12px max(16px, env(safe-area-inset-right, 0px)) calc(12px + env(safe-area-inset-bottom, 0px)) max(16px, env(safe-area-inset-left, 0px)); border-width: 3px 0 0; border-radius: 22px 22px 0 0; box-shadow: 0 -6px 18px rgba(13, 31, 46, .22); }
+  .kora-fenster { left: 0; right: 0; bottom: 0; width: auto; max-height: 45vh; padding: 12px max(16px, env(safe-area-inset-right, 0px)) calc(12px + env(safe-area-inset-bottom, 0px)) max(16px, env(safe-area-inset-left, 0px)); border-width: 3px 0 0; border-radius: 22px 22px 0 0; box-shadow: none; }
   body.kora-offen #app { padding-bottom: calc(45vh + 24px); }
 }
 @media (min-width: 1000px) {
   .kora-fenster { top: 80px; max-height: none; }
   body.kora-offen #app { max-width: min(var(--breite), calc(100vw - 428px)); margin-left: max(0px, calc((100vw - 428px - var(--breite)) / 2)); margin-right: 412px; }
+}
+
+/* Kontraste und Größen der kleinen Texte (mindestens 4,5:1, mindestens ca. 14px). */
+:root { --leise-karte: #3B5267; --status-fertig: #0A4F8F; --status-bereit: #08553E; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --leise-karte: #E1EAF1; --status-fertig: #CBE6FB; --status-bereit: #B0F2D8; } }
+.status.fertig { color: var(--status-fertig); }
+.status.bereit { color: var(--status-bereit); }
+.karte-sub, .karte .dauer, .bereit-karte small { color: var(--leise-karte); }
+.karte.abschluss { background: color-mix(in srgb, var(--farbe) 26%, var(--papier)); }
+.kicker { font-size: .95rem; }
+.status { font-size: .95rem; }
+.status.fertig::before { content: "✓\00a0"; content: "✓\00a0" / ""; }
+.status.zu { padding: 0; color: var(--leise-karte); border: 0; font-weight: 600; }
+.stempel-wort { font-size: .75rem; }
+.stempel-platz.geschafft .stempel { color: var(--auf-farbe); background: color-mix(in srgb, var(--farbe) 60%, #fff); }
+
+/* Orientierung: Sprungziele rutschen nicht unter die feste Kopfzeile, die Überschrift bekommt beim Seitenwechsel den Fokus ohne Rahmen. */
+html { scroll-padding-top: 90px; }
+h1[tabindex="-1"]:focus { outline: none; }
+
+/* „So geht's“ mit vier Schritten auf dem iPad hoch als 2 + 2 statt 3 + 1. */
+@media (min-width: 641px) and (max-width: 999px) {
+  .schritte:has(> li:nth-child(4):last-child) { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
 
 /* Lesbare Zeilen: Fließtext höchstens ca. 75 Zeichen breit. */
