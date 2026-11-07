@@ -489,6 +489,20 @@ select, .name-zeile input, .text-feld { min-height: var(--ziel); }
 input[type="range"] { height: var(--ziel); }
 .fuss a { display: inline-block; padding: 11px 4px; }
 
+/* Frag Kora macht Platz, statt die Aufgabe zu verdecken.
+   Bis 999px (iPad hoch): Leiste vom unteren Rand, die Seite bekommt unten so viel Abstand, dass man darüber weiterarbeitet.
+   Ab 1000px (iPad quer, Tafel): Fenster rechts, der Inhalt rückt nach links. */
+.kora-hinweis { font-size: .9rem; }
+body.kora-da #app { padding-bottom: 120px; }
+@media (max-width: 999px) {
+  .kora-fenster { left: 0; right: 0; bottom: 0; width: auto; max-height: 45vh; padding: 12px max(16px, env(safe-area-inset-right, 0px)) calc(12px + env(safe-area-inset-bottom, 0px)) max(16px, env(safe-area-inset-left, 0px)); border-width: 3px 0 0; border-radius: 22px 22px 0 0; box-shadow: 0 -6px 18px rgba(13, 31, 46, .22); }
+  body.kora-offen #app { padding-bottom: calc(45vh + 24px); }
+}
+@media (min-width: 1000px) {
+  .kora-fenster { top: 80px; max-height: none; }
+  body.kora-offen #app { max-width: min(var(--breite), calc(100vw - 428px)); margin-left: max(0px, calc((100vw - 428px - var(--breite)) / 2)); margin-right: 412px; }
+}
+
 /* Abschluss-Karte: Zielflagge oben, damit sie nicht wie eine weitere Station aussieht. */
 .karte.abschluss { position: relative; padding-top: 26px; overflow: hidden; }
 .karte.abschluss::before { content: ""; position: absolute; inset: 0 0 auto; height: 14px; border-bottom: 2.500px solid var(--linie); background: repeating-conic-gradient(var(--linie) 0 25%, var(--papier) 0 50%) 0 0 / 14px 14px; }

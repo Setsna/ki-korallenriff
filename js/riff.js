@@ -730,6 +730,9 @@ Beginne mit einer kurzen Begrüßung und frag, wobei du helfen kannst.`;
       root.querySelector('#kora-menue').innerHTML = menue(ansicht);
     };
     function zeichnen() {
+      /* Die Seite macht Platz: unten für den Knopf, beim offenen Fenster für das ganze Fenster (siehe riff.css). */
+      document.body.classList.toggle('kora-da', !!ctx);
+      document.body.classList.toggle('kora-offen', !!ctx && offen);
       if (!ctx) { root.innerHTML = ''; return; }
       if (!offen) {
         root.innerHTML = '<button type="button" class="kora-knopf" id="kora-auf" aria-haspopup="dialog"><img src="bilder/kora.png" alt="" width="40" height="40">Frag Kora</button>';
