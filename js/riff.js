@@ -262,7 +262,7 @@ Beginne mit einer kurzen Begrüßung und frag, wobei du helfen kannst.`;
     <section class="hallo">
       <img class="hallo-kora" src="bilder/kora.png" alt="Kora, die Meeresschildkröte, winkt dir zu" width="200" height="200">
       <div class="blase">
-        <h1>Wer taucht heute?</h1>
+        <h1>${kinder.length ? 'Wer taucht heute?' : 'Hallo! Ich bin Kora.'}</h1>
         ${kinder.length ? `<p>Tippe auf deinen Namen.</p><div class="wer-liste">${liste}</div>` : '<p>Schreib deinen Vornamen auf. Dann wächst hier dein eigenes Riff.</p>'}
         <form class="name-zeile" id="wer-neu"><label for="vorname">${kinder.length ? 'Du bist neu? Wie heißt du?' : 'Wie heißt du?'}</label><input id="vorname" type="text" maxlength="20" placeholder="dein Vorname" autocomplete="off"><button type="submit" class="knopf">Los geht's</button><span class="leise" id="wer-meldung" role="status">Bleibt nur auf diesem Gerät.</span></form>
       </div>
@@ -1140,7 +1140,7 @@ Beginne mit einer kurzen Begrüßung und frag, wobei du helfen kannst.`;
     einblendungSperre(false);
     /* Browser-Tab zeigt, wo man ist. Beim Wechsel bekommt die Überschrift den Fokus, damit Screenreader die neue Ansicht ansagen. */
     const h1 = app.querySelector('h1');
-    const name = aufWer ? 'Wer taucht heute?' : aufHeft ? 'Mein Tauchbuch' : (!station && !modulSeite && ziel !== 'modul0') ? 'Das Riff' : (h1 ? h1.textContent.trim() : '');
+    const name = aufWer ? (kinder.length ? 'Wer taucht heute?' : '') : aufHeft ? 'Mein Tauchbuch' : (!station && !modulSeite && ziel !== 'modul0') ? 'Das Riff' : (h1 ? h1.textContent.trim() : '');
     document.title = name ? `${name} – Tauchgang im KI-Korallenriff` : 'Tauchgang im KI-Korallenriff';
     if (h1 && !ersterAufruf) { h1.tabIndex = -1; h1.focus({ preventScroll: true }); }
     ersterAufruf = false;
