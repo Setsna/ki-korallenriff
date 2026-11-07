@@ -702,13 +702,20 @@ Beginne mit einer kurzen Begrüßung und frag, wobei du helfen kannst.`;
 
   /* Einblendung nach „Fertig!“. neu: Id der Station oder des Moduls, das gerade zum ersten Mal
      fertig wurde. Geht das Kind danach zum Riff, wächst nur dieses Stück sichtbar. */
+  /* Solange die Einblendung offen ist, ist der Rest der Seite gesperrt (Tastatur und Screenreader bleiben im Fenster). */
+  function einblendungSperre(an) {
+    document.querySelectorAll('.kopf, #app, .fuss, #kora-hilfe').forEach(el => { el.inert = an; });
+  }
   function einblenden(inhalt, neu = null) {
     const root = document.getElementById('einblendung');
+    const vorher = document.activeElement;
     root.innerHTML = `<div class="einblendung" role="dialog" aria-modal="true" aria-label="Geschafft"><div class="einblendung-karte">${inhalt}<p class="einblendung-knoepfe"><button type="button" class="knopf" id="zurueck-riff">Zurück zum Riff</button><a class="knopf leise-knopf" href="#heft">Tauchbuch ansehen</a></p></div></div>`;
-    const zu = () => { root.innerHTML = ''; };
+    einblendungSperre(true);
+    const zu = () => { root.innerHTML = ''; einblendungSperre(false); };
     root.querySelector('#zurueck-riff').addEventListener('click', () => { zu(); neuImRiff = neu; location.hash = 'riff'; });
     root.querySelector('a').addEventListener('click', zu);
-    root.querySelector('.einblendung').addEventListener('keydown', e => { if (e.key === 'Escape') zu(); });
+    /* Mit Esc zurück zur Station, der Fokus springt auf den Knopf, mit dem man fertig gemacht hat. */
+    root.querySelector('.einblendung').addEventListener('keydown', e => { if (e.key === 'Escape') { zu(); if (vorher && vorher.isConnected) vorher.focus(); } });
     root.querySelector('#zurueck-riff').focus();
   }
 
@@ -728,6 +735,9 @@ Beginne mit einer kurzen Begrüßung und frag, wobei du helfen kannst.`;
       log.innerHTML = nachrichten();
       log.scrollTop = log.scrollHeight;
       root.querySelector('#kora-menue').innerHTML = menue(ansicht);
+      /* Nach dem Neuzeichnen bleibt der Fokus im Menü statt auf der Seite zu landen. */
+      const erster = root.querySelector('#kora-menue button');
+      if (erster) erster.focus({ preventScroll: true });
     };
     function zeichnen() {
       /* Die Seite macht Platz: unten für den Knopf, beim offenen Fenster für das ganze Fenster (siehe riff.css). */
@@ -740,6 +750,8 @@ Beginne mit einer kurzen Begrüßung und frag, wobei du helfen kannst.`;
           offen = true;
           if (!verlauf.length) sagen('kora', `Hallo! Ich bin Kora. Brauchst du Hilfe bei „${ctx.titel}“? Tipp unten auf eine Frage.`);
           zeichnen();
+          const erster = root.querySelector('#kora-menue button');
+          if (erster) erster.focus({ preventScroll: true });
         });
         return;
       }
@@ -749,7 +761,7 @@ Beginne mit einer kurzen Begrüßung und frag, wobei du helfen kannst.`;
         <div class="kora-verlauf" id="kora-verlauf" aria-live="polite">${nachrichten()}</div>
         <div id="kora-menue">${menue()}</div></section>`;
       root.querySelector('#kora-verlauf').scrollTop = 1e6;
-      root.querySelector('#kora-zu').addEventListener('click', () => { offen = false; zeichnen(); });
+      root.querySelector('#kora-zu').addEventListener('click', () => { offen = false; zeichnen(); root.querySelector('#kora-auf').focus({ preventScroll: true }); });
       root.querySelector('#kora-menue').addEventListener('click', e => {
         const b = e.target.closest('button');
         if (!b) return;
@@ -1123,9 +1135,17 @@ Beginne mit einer kurzen Begrüßung und frag, wobei du helfen kannst.`;
       ansichtPlatzhalter(modulSeite.titel, `Modul ${modulSeite.nr} von ${R.module.length} · Abschluss`, 'Hier wird noch gebaut. Bald schaust du hier zurück: Was weißt du jetzt?');
     } else ansichtRiff();
     neuImRiff = null;
+    einblendungSperre(false);
+    /* Browser-Tab zeigt, wo man ist. Beim Wechsel bekommt die Überschrift den Fokus, damit Screenreader die neue Ansicht ansagen. */
+    const h1 = app.querySelector('h1');
+    const name = aufWer ? 'Wer taucht heute?' : aufHeft ? 'Mein Tauchbuch' : (!station && !modulSeite && ziel !== 'modul0') ? 'Das Riff' : (h1 ? h1.textContent.trim() : '');
+    document.title = name ? `${name} – Tauchgang im KI-Korallenriff` : 'Tauchgang im KI-Korallenriff';
+    if (h1 && !ersterAufruf) { h1.tabIndex = -1; h1.focus({ preventScroll: true }); }
+    ersterAufruf = false;
     /* Sofort nach oben. Weiches Scrollen (scroll-behavior: smooth) blieb hier sonst mitten in der Seite hängen. */
     window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
   }
+  let ersterAufruf = true;
   window.addEventListener('hashchange', route);
   route();
 })();
