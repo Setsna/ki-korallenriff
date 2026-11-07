@@ -205,8 +205,9 @@ textarea { display: block; width: 100%; margin-top: 10px; padding: 10px; font: .
 .zeiten { display: grid; gap: 10px; margin-top: 12px; }
 .zeit-zeile { display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr) 6.5em; align-items: center; gap: 10px; }
 .zeit-name { line-height: 1.2; }
-.zeit-spur { display: block; height: 16px; overflow: hidden; background: var(--grau); border: 2px solid var(--linie); border-radius: 999px; }
-.zeit-fuellung { display: block; height: 100%; background: var(--farbe); }
+.zeit-muscheln { display: flex; flex-wrap: wrap; gap: 4px; min-height: 22px; }
+.muschel { display: block; width: 24px; height: 22px; }
+.zeit-legende { margin-top: 10px; }
 .zeit-wert { font-weight: 700; text-align: right; }
 
 .eintraege { display: grid; gap: 10px; margin: 0; padding: 0; list-style: none; }

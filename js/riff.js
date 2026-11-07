@@ -418,6 +418,7 @@ Beginne mit einer kurzen Begrüßung und frag, wobei du helfen kannst.`;
     <section class="heft-teil"><h2>Meine Lernzeit</h2>
       <p class="leise">So lange hast du in jedem Modul gearbeitet. Mehr ist nicht besser. Jeder lernt in seinem Tempo.</p>
       <div class="zeiten">${lernzeitZeilen()}</div>
+      <p class="leise zeit-legende">Eine Muschel steht für bis zu 5 Minuten.</p>
     </section>
 
     <section class="heft-teil"><h2>Das kann ich schon</h2>${kannListe()}</section>
@@ -463,10 +464,11 @@ Beginne mit einer kurzen Begrüßung und frag, wobei du helfen kannst.`;
     const summe = ids => ids.reduce((n, id) => n + (store.zeit[id] || 0), 0);
     const zeilen = [{ name: 'Modul 0', titel: 'Die Große Erzählung', sek: summe([R.erzaehlung.id]), farbe: 'erz' }]
       .concat(R.module.map(m => ({ name: `Modul ${m.nr}`, titel: m.titel, sek: summe(m.stationen.map(s => s.id).concat(m.id)), farbe: m.farbe })));
-    const groesste = Math.max(600, ...zeilen.map(z => z.sek));
+    /* Keine Balken, damit kein Modul „besser“ aussieht: eine Muschel für jede angefangenen 5 Minuten (höchstens 12). */
+    const MUSCHEL = '<svg class="muschel" viewBox="0 0 24 22" aria-hidden="true"><path d="M12 20L2.5 8.5C2.5 2 21.5 2 21.5 8.5Z" fill="var(--farbe)" stroke="var(--linie)" stroke-width="1.8" stroke-linejoin="round"/><path d="M12 20L6.5 5.5M12 20V3.8M12 20L17.5 5.5" fill="none" stroke="var(--linie)" stroke-width="1.3" stroke-linecap="round"/><path d="M9 20H15" stroke="var(--linie)" stroke-width="2.2" stroke-linecap="round"/></svg>';
     return zeilen.map(z => `<div class="zeit-zeile ${z.farbe}">
       <span class="zeit-name"><b>${z.name}</b> ${esc(z.titel)}</span>
-      <span class="zeit-spur" aria-hidden="true"><span class="zeit-fuellung" style="width:${Math.round(z.sek / groesste * 100)}%"></span></span>
+      <span class="zeit-muscheln">${MUSCHEL.repeat(z.sek ? Math.min(12, Math.ceil(z.sek / 300)) : 0)}</span>
       <span class="zeit-wert">${zeitText(z.sek)}</span>
     </div>`).join('');
   }
