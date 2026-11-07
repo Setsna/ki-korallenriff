@@ -41,7 +41,7 @@ html { scroll-behavior: smooth; }
 body {
   margin: 0;
   font-family: var(--schrift);
-  font-size: 18px;
+  font-size: 1.125rem; /* 18px, wächst an der Tafel mit (siehe unten) */
   line-height: 1.5;
   color: var(--tinte);
   background: linear-gradient(180deg, var(--himmel) 0, var(--grund) 420px) no-repeat, var(--grund);
@@ -501,6 +501,35 @@ body.kora-da #app { padding-bottom: 120px; }
 @media (min-width: 1000px) {
   .kora-fenster { top: 80px; max-height: none; }
   body.kora-offen #app { max-width: min(var(--breite), calc(100vw - 428px)); margin-left: max(0px, calc((100vw - 428px - var(--breite)) / 2)); margin-right: 412px; }
+}
+
+/* Lesbare Zeilen: Fließtext höchstens ca. 75 Zeichen breit. */
+.seite p, .seite li, .geschichte-teil > :last-child { max-width: 75ch; }
+
+/* Film: laufendes Kapitel markiert, „Großes Bild“ füllt den Bildschirm. */
+.film-kapitel button[aria-current="true"] { background: #FFC94A; border-width: 3px; }
+.film:fullscreen { display: flex; flex-direction: column; justify-content: center; gap: 2vh; padding: 3vh 4vw; border: 0; border-radius: 0; }
+.film:-webkit-full-screen { display: flex; flex-direction: column; justify-content: center; gap: 2vh; padding: 3vh 4vw; border: 0; border-radius: 0; }
+.film:fullscreen .film-rahmen canvas { width: auto; max-width: 100%; max-height: 74vh; margin: auto; }
+.film:-webkit-full-screen .film-rahmen canvas { width: auto; max-width: 100%; max-height: 74vh; margin: auto; }
+.film:fullscreen .film-rahmen { background: transparent; }
+/* Ersatz, wenn der Browser kein Vollbild erlaubt: Film füllt das Fenster. */
+.film.film-gross { position: fixed; inset: 0; z-index: 60; display: flex; flex-direction: column; justify-content: center; gap: 2vh; padding: 3vh 4vw; overflow-y: auto; border: 0; border-radius: 0; }
+.film.film-gross .film-rahmen { background: transparent; }
+.film.film-gross .film-rahmen canvas { width: auto; max-width: 100%; max-height: 74vh; margin: auto; }
+html.film-gross-offen, html.film-gross-offen body { overflow: hidden; }
+html.film-gross-offen #kora-hilfe { display: none; }
+
+/* Tafel ab 1600px: breiterer Inhalt, alle Schriften wachsen mit der Bildschirmbreite (bei 1920px ca. 25px Fließtext). */
+@media (min-width: 1600px) {
+  :root { --breite: 1440px; }
+  html { font-size: clamp(16px, 1.15vw, 24px); }
+  .karte-icon { width: 64px; height: 64px; font-size: 2.1rem; }
+  .nr, .schritte li::before { width: 46px; height: 46px; }
+  .regel-symbol { width: 46px; height: 46px; }
+  .regel-liste li { grid-template-columns: 46px minmax(0, 1fr); }
+  .zeitleiste { max-width: 680px; }
+  .hallo-kora { animation: none; }
 }
 
 /* Abschluss-Karte: Zielflagge oben, damit sie nicht wie eine weitere Station aussieht. */

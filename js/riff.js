@@ -898,7 +898,7 @@ Beginne mit einer kurzen Begrüßung und frag, wobei du helfen kannst.`;
     const F = R.film;
     const mmss = s => `${Math.floor(s / 60)}:${String(Math.floor(s % 60)).padStart(2, '0')}`;
     box.innerHTML = `<div class="film-rahmen"><canvas width="${F.W}" height="${F.H}" aria-label="Trickfilm: Wie Menschen Maschinen das Lernen beibrachten. Die Sätze stehen im Bild, der ganze Text steht darunter."></canvas></div>
-      <div class="film-leiste"><button type="button" class="knopf" id="film-start">▶ Abspielen</button><button type="button" class="knopf leise-knopf" id="film-ton" aria-pressed="true">Ton an</button><input type="range" id="film-stelle" min="0" max="1000" value="0" aria-label="Stelle im Film"><span class="film-zeit" id="film-zeit">0:00 / ${mmss(F.DAUER)}</span></div>
+      <div class="film-leiste"><button type="button" class="knopf" id="film-start">▶ Abspielen</button><button type="button" class="knopf leise-knopf" id="film-ton" aria-pressed="true">Ton an</button><button type="button" class="knopf leise-knopf" id="film-gross" hidden>Großes Bild</button><input type="range" id="film-stelle" min="0" max="1000" value="0" aria-label="Stelle im Film"><span class="film-zeit" id="film-zeit">0:00 / ${mmss(F.DAUER)}</span></div>
       <div class="film-kapitel" role="group" aria-label="Meilensteine">${F.SZENEN.map((s, i) => (i ? `<button type="button" data-kapitel="${i}">${s.jahr || 'Anfang'}</button>` : '')).join('')}</div>
       <p class="leise">Die Bilder sind gezeichnet und zeigen nicht die echten Personen.</p>`;
     const cv = box.querySelector('canvas'), ctx = cv.getContext('2d'), knopf = box.querySelector('#film-start'), stelle = box.querySelector('#film-stelle'), zeit = box.querySelector('#film-zeit'), tonKnopf = box.querySelector('#film-ton');
@@ -936,7 +936,42 @@ Beginne mit einer kurzen Begrüßung und frag, wobei du helfen kannst.`;
     };
     /* Jeder Neustart durch das Kind versucht es wieder mit Ton. */
     const tonNeuVersuchen = () => { gesperrt = false; tonOk = true; wartetSeit = 0; tonAnzeigen(); };
-    const malen = () => { F.draw(ctx, t); stelle.value = String(Math.round(t / F.DAUER * 1000)); zeit.textContent = `${mmss(t)} / ${mmss(F.DAUER)}`; };
+    /* Das Kapitel der laufenden Szene ist markiert, damit man an der Tafel sieht, wo der Film gerade ist. */
+    const kapitelKnoepfe = [...box.querySelectorAll('[data-kapitel]')];
+    let kapitelJetzt = -1;
+    const kapitelZeigen = () => {
+      const i = F.szeneBei(t);
+      if (i === kapitelJetzt) return;
+      kapitelJetzt = i;
+      kapitelKnoepfe.forEach(b => { if (+b.dataset.kapitel === i) b.setAttribute('aria-current', 'true'); else b.removeAttribute('aria-current'); });
+    };
+    const malen = () => { F.draw(ctx, t); stelle.value = String(Math.round(t / F.DAUER * 1000)); zeit.textContent = `${mmss(t)} / ${mmss(F.DAUER)}`; kapitelZeigen(); };
+    /* Großes Bild: Film mit Knöpfen auf den ganzen Bildschirm. Lässt der Browser kein Vollbild zu,
+       füllt der Film stattdessen das ganze Browserfenster (Klasse film-gross). Esc geht in beiden Fällen zurück. */
+    const grossKnopf = box.querySelector('#film-gross');
+    const vollbildAn = box.requestFullscreen || box.webkitRequestFullscreen;
+    const vollbildJetzt = () => document.fullscreenElement || document.webkitFullscreenElement;
+    const istGross = () => vollbildJetzt() === box || box.classList.contains('film-gross');
+    const beschriften = () => { grossKnopf.textContent = istGross() ? 'Kleines Bild' : 'Großes Bild'; };
+    const fensterGross = an => { box.classList.toggle('film-gross', an); document.documentElement.classList.toggle('film-gross-offen', an); beschriften(); };
+    const kleinMachen = () => {
+      if (vollbildJetzt()) (document.exitFullscreen || document.webkitExitFullscreen).call(document);
+      fensterGross(false);
+    };
+    grossKnopf.hidden = false;
+    grossKnopf.addEventListener('click', () => {
+      if (istGross()) { kleinMachen(); return; }
+      if (!vollbildAn) { fensterGross(true); return; }
+      /* Manche Browser melden die Absage nur als Ereignis oder gar nicht. Deshalb nach kurzer Zeit nachsehen. */
+      const ersatz = () => { if (!vollbildJetzt() && !box.classList.contains('film-gross')) fensterGross(true); };
+      try {
+        const p = vollbildAn.call(box);
+        if (p && p.catch) p.catch(ersatz);
+      } catch (e) { ersatz(); }
+      setTimeout(ersatz, 500);
+    });    box.addEventListener('fullscreenchange', beschriften);
+    box.addEventListener('webkitfullscreenchange', beschriften);
+    box.addEventListener('keydown', e => { if (e.key === 'Escape' && box.classList.contains('film-gross')) fensterGross(false); });
     const schleife = jetzt => {
       if (!cv.isConnected) { laeuft = false; au.pause(); return; }
       const dt = (jetzt - zuletzt) / 1000;
@@ -1012,7 +1047,7 @@ Beginne mit einer kurzen Begrüßung und frag, wobei du helfen kannst.`;
     bild.onload = nachLaden;
     bild.src = 'bilder/kora.png';
     F.bilderLaden(nachLaden);
-    filmStopp = () => { laeuft = false; ziehenEnde(); cancelAnimationFrame(raf); au.pause(); };
+    filmStopp = () => { laeuft = false; ziehenEnde(); cancelAnimationFrame(raf); au.pause(); kleinMachen(); };
   }
 
   function ansichtErzaehlung() {
