@@ -307,12 +307,17 @@ Beginne mit einer kurzen Begrüßung und frag, wobei du helfen kannst.`;
       </div>
     </section>
 
-    <h2 class="abschnitt">Dein Riff</h2>
-    <a class="riff-link" href="#heft" aria-label="Zum Tauchbuch">${riffBlock(true)}</a>
-    <p class="riff-hinweis">Dein Riff wächst mit jedem Material, das du fertig machst.${fertig('erz') ? '' : ' Schau die Große Erzählung an, dann scheint die Sonne ins Wasser.'}</p>
-
-    <h2 class="abschnitt">Heute bereit für dich</h2>
-    <div class="bereit-liste">${bereitListe().join('') || '<p>Du hast alles geschafft. Du kannst jede Station noch einmal machen, so oft du magst.</p>'}</div>
+    <div class="start-raster">
+      <section class="start-riff">
+        <h2 class="abschnitt">Dein Riff</h2>
+        <a class="riff-link" href="#heft" aria-label="Zum Tauchbuch">${riffBlock(true)}</a>
+        <p class="riff-hinweis">Dein Riff wächst mit jedem Material, das du fertig machst.${fertig('erz') ? '' : ' Schau die Große Erzählung an, dann scheint die Sonne ins Wasser.'}</p>
+      </section>
+      <section class="start-bereit">
+        <h2 class="abschnitt">Heute bereit für dich</h2>
+        <div class="bereit-liste">${bereitListe().join('') || '<p>Du hast alles geschafft. Du kannst jede Station noch einmal machen, so oft du magst.</p>'}</div>
+      </section>
+    </div>
 
     <h2 class="abschnitt" id="module">Die Stationen im Riff</h2>
     <a class="modul0 ${fertig('erz') ? 'ist-fertig' : ''}" href="#modul0">
@@ -699,7 +704,7 @@ Beginne mit einer kurzen Begrüßung und frag, wobei du helfen kannst.`;
      fertig wurde. Geht das Kind danach zum Riff, wächst nur dieses Stück sichtbar. */
   function einblenden(inhalt, neu = null) {
     const root = document.getElementById('einblendung');
-    root.innerHTML = `<div class="einblendung" role="dialog" aria-modal="true" aria-label="Geschafft"><div class="einblendung-karte">${inhalt}<p class="einblendung-knoepfe"><button type="button" class="knopf" id="zurueck-riff">Zurück zum Riff</button><a class="knopf leise-knopf" href="#heft">Riff ansehen</a></p></div></div>`;
+    root.innerHTML = `<div class="einblendung" role="dialog" aria-modal="true" aria-label="Geschafft"><div class="einblendung-karte">${inhalt}<p class="einblendung-knoepfe"><button type="button" class="knopf" id="zurueck-riff">Zurück zum Riff</button><a class="knopf leise-knopf" href="#heft">Tauchbuch ansehen</a></p></div></div>`;
     const zu = () => { root.innerHTML = ''; };
     root.querySelector('#zurueck-riff').addEventListener('click', () => { zu(); neuImRiff = neu; location.hash = 'riff'; });
     root.querySelector('a').addEventListener('click', zu);

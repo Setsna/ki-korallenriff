@@ -489,6 +489,23 @@ select, .name-zeile input, .text-feld { min-height: var(--ziel); }
 input[type="range"] { height: var(--ziel); }
 .fuss a { display: inline-block; padding: 11px 4px; }
 
+/* Abschluss-Karte: Zielflagge oben, damit sie nicht wie eine weitere Station aussieht. */
+.karte.abschluss { position: relative; padding-top: 26px; overflow: hidden; }
+.karte.abschluss::before { content: ""; position: absolute; inset: 0 0 auto; height: 14px; border-bottom: 2.500px solid var(--linie); background: repeating-conic-gradient(var(--linie) 0 25%, var(--papier) 0 50%) 0 0 / 14px 14px; }
+
+/* Brett-Stationen: Das Brett bleibt stehen, während man rechts die Fragen beantwortet. */
+@media (min-width: 641px) {
+  .brett-raster > .brett { position: sticky; top: 80px; }
+}
+
+/* iPad quer und größer: Riff und „Heute bereit“ nebeneinander, Begrüßung kompakter. */
+@media (min-width: 1000px) {
+  .hallo { grid-template-columns: 130px minmax(0, 1fr); padding: 14px 18px; }
+  .hallo-kora { max-width: 130px; }
+  .start-raster { display: grid; grid-template-columns: minmax(0, 2fr) minmax(0, 1fr); gap: 24px; align-items: start; }
+  .start-bereit .bereit-liste { grid-template-columns: minmax(0, 1fr); }
+}
+
 /* Handy */
 @media (max-width: 640px) {
   body { font-size: 17px; }
