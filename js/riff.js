@@ -147,8 +147,10 @@
       if (neu) ziel = { x: p.x + 8, y: p.y - 30 };
       const c = da ? '#37A85B' : '#FFFFFF';
       /* Das Seegras wächst hinter dem Brett hervor und ragt darüber hinaus. Am Pfosten schaut nichts heraus. */
-      return `${neu ? licht(p.x + 8, p.y - 95) : ''}<g transform="translate(${p.x} ${p.y})"><g transform="translate(8 -10)"><g class="pflanze ${da ? 'gewachsen' : 'wartet'}${neu ? ' neu' : ''}">${halm(-14, 104, c)}${halm(0, 126, c)}${halm(14, 96, c)}</g></g><image class="riff-schild" href="bilder/schild.png" x="-42" y="-42" width="84" height="74"/><text class="riff-schild-text" x="0" y="-18" text-anchor="middle">Modul ${i + 1}</text></g>`;
+      return `${neu ? licht(p.x + 8, p.y - 95) : ''}<g transform="translate(${p.x} ${p.y})"><g transform="translate(8 -10)"><g class="pflanze ${da ? 'gewachsen' : 'wartet'}${neu ? ' neu' : ''}">${halm(-14, 104, c)}${halm(0, 126, c)}${halm(14, 96, c)}</g></g></g>`;
     }).join('');
+    /* Die Schilder liegen ganz vorn, vor Seegras und Korallen. */
+    const schilderSvg = PFLANZEN.map((p, i) => `<g transform="translate(${p.x} ${p.y})"><image class="riff-schild" href="bilder/schild.png" x="-42" y="-42" width="84" height="74"/><text class="riff-schild-text" x="0" y="-18" text-anchor="middle">Modul ${i + 1}</text></g>`).join('');
     const sonne = fertig('erz');
     const schwaermeSvg = SCHWAERME.filter(s => n >= s.ab).map(s => schwarm(s.x, s.y, s.c, s.dauer)).join('');
     /* Kora: sonst schwimmt sie hin und her. Ist etwas neu, schwimmt sie einmal dorthin und bleibt daneben. */
@@ -172,7 +174,7 @@
       <g class="blasen" fill="rgba(255,255,255,.55)"><circle cx="160" cy="210" r="4"/><circle cx="168" cy="186" r="2.500"/><circle cx="520" cy="200" r="3.500"/><circle cx="514" cy="170" r="2.500"/><circle cx="808" cy="190" r="4"/><circle cx="816" cy="160" r="2.500"/></g>
       <path d="M0 262C150 240 290 268 470 256S770 242 940 262V320H0Z" fill="url(#sand)"/>
       <g fill="#A9B4B8"><ellipse cx="140" cy="303" rx="22" ry="9"/><ellipse cx="395" cy="306" rx="18" ry="8"/><ellipse cx="665" cy="304" rx="24" ry="10"/></g>
-      ${schwaermeSvg}${pflanzenSvg}${korallenSvg}
+      ${schwaermeSvg}${pflanzenSvg}${korallenSvg}${schilderSvg}
       ${sonne ? '' : '<g class="sonne-hinweis"><circle cx="896" cy="104" r="20" fill="#FFD866" stroke="#FFF8D6" stroke-width="3"/><text x="866" y="111" text-anchor="end">Film ansehen: Sonne!</text></g>'}
       ${koraSvg}
     </svg>`;
