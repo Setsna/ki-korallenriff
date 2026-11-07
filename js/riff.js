@@ -144,9 +144,10 @@
     const pflanzenSvg = PFLANZEN.map((p, i) => {
       const da = modulFertig(R.module[i]);
       const neu = da && neuImRiff === R.module[i].id;
-      if (neu) ziel = { x: p.x + 24, y: p.y };
-      const c = da ? '#37A85B' : '#AFC4B6';
-      return `${neu ? licht(p.x + 24, p.y - 50) : ''}<g transform="translate(${p.x} ${p.y})"><g transform="translate(24 22)"><g class="pflanze ${da ? 'gewachsen' : 'wartet'}${neu ? ' neu' : ''}">${halm(-9, 80, c)}${halm(0, 96, c)}${halm(9, 74, c)}</g></g><image class="riff-schild" href="bilder/schild.png" x="-42" y="-42" width="84" height="74"/><text class="riff-schild-text" x="0" y="-18" text-anchor="middle">Modul ${i + 1}</text></g>`;
+      if (neu) ziel = { x: p.x + 8, y: p.y - 30 };
+      const c = da ? '#37A85B' : '#FFFFFF';
+      /* Das Seegras wächst hinter dem Brett hervor und ragt darüber hinaus. Am Pfosten schaut nichts heraus. */
+      return `${neu ? licht(p.x + 8, p.y - 95) : ''}<g transform="translate(${p.x} ${p.y})"><g transform="translate(8 -10)"><g class="pflanze ${da ? 'gewachsen' : 'wartet'}${neu ? ' neu' : ''}">${halm(-14, 104, c)}${halm(0, 126, c)}${halm(14, 96, c)}</g></g><image class="riff-schild" href="bilder/schild.png" x="-42" y="-42" width="84" height="74"/><text class="riff-schild-text" x="0" y="-18" text-anchor="middle">Modul ${i + 1}</text></g>`;
     }).join('');
     const sonne = fertig('erz');
     const schwaermeSvg = SCHWAERME.filter(s => n >= s.ab).map(s => schwarm(s.x, s.y, s.c, s.dauer)).join('');
