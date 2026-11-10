@@ -49,11 +49,21 @@ Die Fischwerte in den Spielen sind vereinfachte Spielwerte und auf der Seite auc
 Der Film ist kein Video, sondern eine Animation auf einem Canvas mit eigener Tonspur je Szene. Die Tonspur steuert die Filmzeit.
 Fällt der Ton aus, läuft der Film stumm mit eingeblendetem Text weiter.
 
-Wird eine Aufnahme neu gesprochen, müssen zwei Dinge mitgeändert werden:
+Die Stimme ist mit KI erzeugt (ElevenLabs, Modell Eleven v3, eine Stimme für alle Szenen).
+Die Untertitel kommen aus den Sätzen in `js/riff-film.js`, nicht aus der Aufnahme. Der gesprochene Text muss deshalb wortgleich bleiben.
 
-1. Die Tonbearbeitung mit ffmpeg wiederholen:
-   `highpass=f=80,deesser=i=0.45:m=0.5:f=0.5,equalizer=f=4500:t=q:w=1.4:g=-2.5,highshelf=f=9000:g=-3,loudnorm=I=-18:LRA=9:TP=-1.5`, danach pro Datei `volume` auf -21 LUFS.
-2. Die Satzzeiten in `js/riff-film.js` (`AUFNAHME`) neu eintragen.
+So wird eine Szene neu vertont:
+
+1. Den Text aus der Kopiervorlage (mit Audio-Tags) in ElevenLabs erzeugen und als `szene-NN.mp3` speichern.
+2. Die MP3 nach `Dateien/Audio-Originale/ElevenLabs/` legen.
+3. `py Dateien/Werkzeuge/ton_bearbeiten.py NN` ausführen. Das Skript schneidet die Stille ab, bearbeitet den Klang
+   (`highpass=f=80,deesser=i=0.45:m=0.5:f=0.5,equalizer=f=4500:t=q:w=1.4:g=-2.5,highshelf=f=9000:g=-3,loudnorm=I=-18:LRA=9:TP=-1.5`, danach `volume` auf -21 LUFS),
+   schreibt `audio/szene-NN.m4a` und misst die Satzzeiten.
+4. Die ausgegebenen Zeiten in `js/riff-film.js` bei `AUFNAHME` einsetzen und `STAND` der Szene hochzählen.
+
+Alle Bewegungen im Film hängen an den Satzanfängen und passen sich deshalb von selbst an.
+
+**Achtung:** Die Kopiervorlage (`Ausgaben/ElevenLabs Sprechtexte Film.md`), die MP3s und das Skript liegen nur lokal, weil `.gitignore` sie sperrt. Auf GitHub sind sie nicht zu finden.
 
 ## Vorschau
 
@@ -61,6 +71,20 @@ Wird eine Aufnahme neu gesprochen, müssen zwei Dinge mitgeändert werden:
 https://setsna.github.io/ki-korallenriff/?vorschau=5
 
 In der Vorschau wird nichts gespeichert.
+
+## Gestaltung
+
+Feste Bildschirmgrößen, nach denen sich die Seite richtet:
+
+| Breite | Gerät |
+|---|---|
+| unter 640 px | Handy |
+| 640–999 px | iPad hoch |
+| 1000–1599 px | iPad quer, Laptop |
+| ab 1600 px | Tafel (Schrift wird größer) |
+
+Neue Elemente in allen vier Größen und in hell und dunkel prüfen.
+Alles, was man antippt, ist mindestens 44 px hoch. Text hat mindestens 4,5:1 Kontrast.
 
 ## Wo der Fortschritt liegt
 
@@ -96,6 +120,6 @@ Arbeitsdateien und Originale bleiben dadurch lokal. Eine neue Datei oder ein neu
 ## Technik
 
 Reines HTML, CSS und JavaScript ohne Framework. Gehostet auf GitHub Pages.
-Die Szenenbilder und Kora sind mit Canva erstellt. Die Schriften Andika, Baloo 2 und IBM Plex Mono stehen unter der SIL Open Font License, die Lizenztexte liegen in `schriften/`.
+Die Szenenbilder und Kora sind mit Canva erstellt. Die Stimme im Film ist mit KI erzeugt (elevenlabs.io). Die Schriften Andika, Baloo 2 und IBM Plex Mono stehen unter der SIL Open Font License, die Lizenztexte liegen in `schriften/`.
 
 Alle drei Seiten tragen `<meta name="robots" content="noindex, nofollow">`. Die Seite ist öffentlich erreichbar, soll aber nicht über Suchmaschinen gefunden werden.
