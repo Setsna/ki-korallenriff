@@ -22,7 +22,7 @@ Es gibt keine Punkte und keinen Zeitdruck: Mit jeder fertigen Station wächst ei
 | `manifest.webmanifest`, `bilder/app-*.png` | Für „Zum Home-Bildschirm“: Name, Farben und App-Symbol (Kora) |
 | `bilder/urkunde.jpg` | Hintergrund von Urkunde und Tauchbuch-Blatt (Canva) |
 | `bilder/film/` | Die zwölf Szenenbilder des Films |
-| `audio/` | Die zwölf eingesprochenen Tonspuren des Films |
+| `audio/` | Die zwölf Tonspuren des Films (Stimme: ElevenLabs, bearbeitet mit `Dateien/Werkzeuge/ton_bearbeiten.py`) |
 | `schriften/` | Selbst gehostete Schriften mit ihren Lizenzen |
 | `impressum.html` | Impressum |
 | `datenschutz.html` | Datenschutzerklärung |
@@ -80,7 +80,7 @@ Die Seite setzt keine Cookies und lädt nichts von fremden Servern nach, auch di
 ## Nach einer Änderung: Versionsnummer hochzählen
 
 Browser merken sich `js` und `css` eine Weile und liefern sonst die alte Fassung aus.
-Deshalb hängt hinter jeder lokalen `js`- und `css`-Datei in `index.html`, `impressum.html` und `datenschutz.html` ein `?v=13`.
+Deshalb hängt hinter jeder lokalen `js`- und `css`-Datei in `index.html`, `impressum.html` und `datenschutz.html` ein `?v=28`.
 **Wer etwas an `js` oder `css` ändert, zählt diese Zahl in allen drei Dateien um eins hoch.**
 Dann laden die Geräte beim nächsten Öffnen der Seite die neue Fassung.
 

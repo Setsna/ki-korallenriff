@@ -3,7 +3,7 @@
    draw(ctx, t) erzeugt jedes Bild allein aus der Zeit, darum passt es immer zum Schieberegler. */
 (() => {
   /* Wird Bild oder Ton einer Szene getauscht: Zahl hier hochzählen, sonst zeigen die Geräte die alte Fassung. */
-  const STAND = { 1: 2, 2: 2, 12: 2 };
+  const STAND = { 1: 3, 2: 3, 3: 3, 4: 3, 5: 3, 6: 3, 7: 3, 8: 3, 9: 3, 10: 3, 11: 3, 12: 3 };
   const stand = nr => (STAND[nr] ? `?v=${STAND[nr]}` : '');
   'use strict';
   const W = 1280, H = 720;
@@ -246,20 +246,21 @@
   ];
 
   /* Zeitplan nach den Aufnahmen: Wann beginnt und endet jeder Satz in der Datei (Sekunden).
-     Die Stille am Anfang und Ende der Dateien wird übersprungen. */
+     Die Stille am Anfang und Ende der Dateien wird übersprungen.
+     Stimmen von ElevenLabs. Bearbeitung und Messung: Dateien/Werkzeuge/ton_bearbeiten.py */
   const AUFNAHME = {
-    1: [[2.47, 6.87], [8.25, 13.63], [14.96, 18.85]],
-    2: [[1.98, 10.34], [11.7, 16.44], [17.79, 22.89]],
-    3: [[1.72, 8.9], [9.94, 16.54], [17.38, 19.88]],
-    4: [[1.7, 8.78], [9.62, 16.98], [18.32, 23.36]],
-    5: [[1.84, 9.06], [10.24, 13.68], [14.94, 21.92]],
-    6: [[1.74, 9.76], [11.12, 18.26], [19.48, 25.18]],
-    7: [[1.82, 9.18], [10.6, 17.32]],
-    8: [[1.8, 10.78], [12.2, 18.18]],
-    9: [[1.8, 6.64], [7.58, 14.06], [14.96, 17.82]],
-    10: [[2.18, 6.76], [7.88, 11.9], [12.82, 17.56]],
-    11: [[2.22, 6.86], [7.88, 11.74]],
-    12: [[1.75, 3.89], [4.95, 16.1], [17.34, 21.75], [23.03, 24.46]]
+    1: [[0.0, 3.86], [4.36, 8.38], [8.79, 12.2]],
+    2: [[0.12, 5.31], [5.66, 9.22], [9.69, 13.56]],
+    3: [[0.13, 5.1], [5.56, 10.24], [10.77, 12.59]],
+    4: [[0.0, 6.2], [6.59, 9.75], [10.13, 14.29]],
+    5: [[0.0, 4.83], [5.23, 7.87], [8.4, 13.71]],
+    6: [[0.0, 5.32], [5.96, 10.51], [11.03, 15.23]],
+    7: [[0.18, 4.57], [5.09, 9.56]],
+    8: [[0.0, 5.78], [6.11, 11.55]],
+    9: [[0.13, 3.5], [3.87, 8.51], [8.84, 11.08]],
+    10: [[0.12, 3.39], [3.82, 7.12], [7.5, 11.23]],
+    11: [[0.0, 3.51], [3.66, 7.24]],
+    12: [[0.16, 1.41], [1.95, 10.44], [10.87, 14.3], [14.94, 16.59]]
   };
   let DAUER = 0;
   (function zeitplan() {
@@ -268,7 +269,7 @@
       s.start = summe; s.zeit = [];
       const aufnahme = AUFNAHME[s.nr];
       if (aufnahme) {
-        const ab = aufnahme[0][0] - 0.35, bis = aufnahme[aufnahme.length - 1][1];
+        const ab = Math.max(0, aufnahme[0][0] - 0.35), bis = aufnahme[aufnahme.length - 1][1];
         s.ton = { datei: `audio/szene-${String(s.nr).padStart(2, '0')}.m4a${stand(s.nr)}`, ab };
         aufnahme.forEach(([von, ende], i) => {
           const naechster = aufnahme[i + 1] ? aufnahme[i + 1][0] - 0.1 : bis + 0.5;
