@@ -17,7 +17,7 @@ Es gibt keine Punkte und keinen Zeitdruck: Mit jeder fertigen Station wächst ei
 | `js/riff-spiele.js` | Die Mini-Spiele der Stationen |
 | `js/riff-film.js` | Szenen, Sprechtext, Satzzeiten, Bewegungen und Zeitleiste von Modul 0 |
 | `js/riff-urkunde.js` | Urkunde und Tauchbuch-Blatt: zeichnet beide Seiten und baut daraus ein PDF, ohne Bibliothek |
-| `css/riff.css` | Das gesamte Aussehen, auch der Dunkelmodus |
+| `css/riff.css` | Das gesamte Aussehen (immer dunkel) |
 | `bilder/kora.png` | Kora |
 | `manifest.webmanifest`, `bilder/app-*.png` | Für „Zum Home-Bildschirm“: Name, Farben und App-Symbol (Kora) |
 | `bilder/urkunde.jpg` | Hintergrund von Urkunde und Tauchbuch-Blatt (Canva) |
@@ -83,7 +83,7 @@ Feste Bildschirmgrößen, nach denen sich die Seite richtet:
 | 1000–1599 px | iPad quer, Laptop |
 | ab 1600 px | Tafel (Schrift wird größer) |
 
-Neue Elemente in allen vier Größen und in hell und dunkel prüfen.
+Die Seite ist immer dunkel, auch wenn das Gerät auf hell eingestellt ist. Neue Elemente in allen vier Größen prüfen.
 Alles, was man antippt, ist mindestens 44 px hoch. Text hat mindestens 4,5:1 Kontrast.
 
 ## Wo der Fortschritt liegt
@@ -104,7 +104,7 @@ Die Seite setzt keine Cookies und lädt nichts von fremden Servern nach, auch di
 ## Nach einer Änderung: Versionsnummer hochzählen
 
 Browser merken sich `js` und `css` eine Weile und liefern sonst die alte Fassung aus.
-Deshalb hängt hinter jeder lokalen `js`- und `css`-Datei in `index.html`, `impressum.html` und `datenschutz.html` ein `?v=28`.
+Deshalb hängt hinter jeder lokalen `js`- und `css`-Datei in `index.html`, `impressum.html` und `datenschutz.html` ein `?v=29`.
 **Wer etwas an `js` oder `css` ändert, zählt diese Zahl in allen drei Dateien um eins hoch.**
 Dann laden die Geräte beim nächsten Öffnen der Seite die neue Fassung.
 

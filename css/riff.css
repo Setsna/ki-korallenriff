@@ -1,5 +1,5 @@
 :root {
-  color-scheme: light dark;
+  color-scheme: dark;
   --tinte: #17324D;
   --leise: #4C6478;
   --linie: #17324D;
@@ -28,13 +28,12 @@
   --ziel-gross: 56px;  /* Hauptknöpfe */
   --breite: 1080px;    /* Inhaltsbreite, für die Tafel ab 1600px kommt in Etappe 5 mehr */
 }
-@media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]) {
+/* Die Seite sieht immer dunkel aus, egal was das Gerät eingestellt hat (Ingo, 11.11.2026). */
+:root {
     --tinte: #F0F6FA; --leise: #B9CAD7; --linie: #A9C0D0; --papier: #1D3244; --grund: #10202E;
     --himmel: #15303F; --flaeche: #27475C; --grau: #2A3B49; --feld: #15283A; --warm: #4A3F1E;
     --rand-leise: #6E8799; --gruen: #72DDB7; --blau: #8CC4F2;
     --schatten: 0 4px 0 rgba(0, 0, 0, .55);
-  }
 }
 * { box-sizing: border-box; }
 html { scroll-behavior: smooth; }
@@ -506,7 +505,7 @@ body.kora-da #app { padding-bottom: 120px; }
 
 /* Kontraste und Größen der kleinen Texte (mindestens 4,5:1, mindestens ca. 14px). */
 :root { --leise-karte: #3B5267; --status-fertig: #0A4F8F; --status-bereit: #08553E; }
-@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --leise-karte: #E1EAF1; --status-fertig: #CBE6FB; --status-bereit: #B0F2D8; } }
+:root { --leise-karte: #E1EAF1; --status-fertig: #CBE6FB; --status-bereit: #B0F2D8; } /* immer dunkel */
 .status.fertig { color: var(--status-fertig); }
 .status.bereit { color: var(--status-bereit); }
 .karte-sub, .karte .dauer, .bereit-karte small { color: var(--leise-karte); }
