@@ -764,6 +764,7 @@ Beginne mit einer kurzen Begrüßung und frag, wobei du helfen kannst.`;
         <div id="kora-menue">${menue()}</div></section>`;
       root.querySelector('#kora-verlauf').scrollTop = 1e6;
       root.querySelector('#kora-zu').addEventListener('click', () => { offen = false; zeichnen(); root.querySelector('#kora-auf').focus({ preventScroll: true }); });
+      root.querySelector('.kora-fenster').addEventListener('keydown', e => { if (e.key === 'Escape') root.querySelector('#kora-zu').click(); });
       root.querySelector('#kora-menue').addEventListener('click', e => {
         const b = e.target.closest('button');
         if (!b) return;
@@ -827,7 +828,14 @@ Beginne mit einer kurzen Begrüßung und frag, wobei du helfen kannst.`;
     let spiel = spielStarten();
     const kk = document.getElementById('kontrollkarte');
     const kk_knopf = document.getElementById('kontrolle-knopf');
-    const kkFuellen = () => { kk.innerHTML = `<h3>Kontrollkarte</h3>${spiel.kontrolle()}`; };
+    const kkFuellen = () => {
+      kk.innerHTML = `<h3>Kontrollkarte</h3>${spiel.kontrolle()}`;
+      /* Unter 640px steht jede Zeile als Block untereinander, dann braucht jede Zelle ihren Spaltennamen. */
+      kk.querySelectorAll('.kontroll-tabelle').forEach(tab => {
+        const koepfe = [...tab.querySelectorAll('thead th')].map(th => th.textContent);
+        tab.querySelectorAll('tbody tr').forEach(tr => [...tr.children].forEach((td, i) => { td.dataset.spalte = koepfe[i] || ''; }));
+      });
+    };
     kk_knopf.addEventListener('click', () => {
       const auf = kk.hidden;
       kk.hidden = !auf;
@@ -911,7 +919,7 @@ Beginne mit einer kurzen Begrüßung und frag, wobei du helfen kannst.`;
   function filmEinrichten(box) {
     const F = R.film;
     const mmss = s => `${Math.floor(s / 60)}:${String(Math.floor(s % 60)).padStart(2, '0')}`;
-    box.innerHTML = `<div class="film-rahmen"><canvas width="${F.W}" height="${F.H}" aria-label="Trickfilm: Wie Menschen Maschinen das Lernen beibrachten. Die Sätze stehen im Bild, der ganze Text steht darunter."></canvas></div>
+    box.innerHTML = `<div class="film-rahmen"><canvas width="${F.W}" height="${F.H}" aria-label="Trickfilm: Wie Menschen Maschinen das Lernen beibrachten. Die Sätze stehen im Bild, der ganze Text steht darunter."></canvas><span class="film-play" aria-hidden="true">▶</span></div>
       <div class="film-leiste"><button type="button" class="knopf" id="film-start">▶ Abspielen</button><button type="button" class="knopf leise-knopf" id="film-ton" aria-pressed="true">Ton an</button><button type="button" class="knopf leise-knopf" id="film-gross" hidden>Großes Bild</button><input type="range" id="film-stelle" min="0" max="1000" value="0" aria-label="Stelle im Film"><span class="film-zeit" id="film-zeit">0:00 / ${mmss(F.DAUER)}</span></div>
       <div class="film-kapitel" role="group" aria-label="Meilensteine">${F.SZENEN.map((s, i) => (i ? `<button type="button" data-kapitel="${i}">${s.jahr || 'Anfang'}</button>` : '')).join('')}</div>
       <p class="leise">Die Bilder sind gezeichnet und zeigen nicht die echten Personen.</p>`;
@@ -1003,13 +1011,14 @@ Beginne mit einer kurzen Begrüßung und frag, wobei du helfen kannst.`;
           if (wartetSeit > 3) { tonOk = false; au.pause(); }
         }
       } else t += dt;
-      if (t >= F.DAUER) { t = F.DAUER - 0.01; laeuft = false; au.pause(); knopf.textContent = '↺ Noch einmal'; }
+      if (t >= F.DAUER) { t = F.DAUER - 0.01; laeuft = false; box.classList.remove('spielt'); au.pause(); knopf.textContent = '↺ Noch einmal'; }
       malen();
       if (laeuft) raf = requestAnimationFrame(schleife);
     };
     const spielen = () => {
       if (t >= F.DAUER - 0.05) t = 0;
       laeuft = true;
+      box.classList.add('spielt');
       tonNeuVersuchen();
       knopf.textContent = '❚❚ Pause';
       zuletzt = performance.now();
@@ -1017,8 +1026,10 @@ Beginne mit einer kurzen Begrüßung und frag, wobei du helfen kannst.`;
       raf = requestAnimationFrame(schleife);
     };
     const ziehenEnde = () => { clearTimeout(ziehUhr); ziehen = false; };
-    const pause = () => { laeuft = false; ziehenEnde(); cancelAnimationFrame(raf); au.pause(); knopf.textContent = '▶ Weiter'; };
+    const pause = () => { laeuft = false; box.classList.remove('spielt'); ziehenEnde(); cancelAnimationFrame(raf); au.pause(); knopf.textContent = '▶ Weiter'; };
     knopf.addEventListener('click', () => (laeuft ? pause() : spielen()));
+    /* Ein Tipp aufs Bild startet oder pausiert den Film, wie der Knopf darunter. */
+    box.querySelector('.film-rahmen').addEventListener('click', () => knopf.click());
     tonKnopf.addEventListener('click', () => {
       if (gesperrt || (laeuft && !tonOk)) {
         au.muted = false;
@@ -1076,7 +1087,7 @@ Beginne mit einer kurzen Begrüßung und frag, wobei du helfen kannst.`;
       <div class="film" id="film"></div>
       <section class="teil nachlesen"><h2>Zum Nachlesen</h2>${szenenTexte.map(s => `<div class="geschichte-teil"><span class="geschichte-jahr">${esc(s.jahr || 'Vor langer Zeit')}</span><p>${esc(s.saetze.join(' '))}</p></div>`).join('')}</section>
       <section class="teil"><h2>Die Zeitleiste</h2><p>Sie ist maßstabsgetreu: Jeder kleine Strich steht für zehn Jahre. Schau, wie lange fast nichts passiert und wie eng es ganz unten wird!</p>${F.zeitleiste()}</section>
-      <section class="teil"><h2><span class="nr">?</span>Was möchtest du herausfinden?</h2><ul class="fragen">${E.fragen.map(f => `<li>${esc(f)}</li>`).join('')}</ul><p>Im Riff warten passende Stationen: <a href="#a1">Regel oder Beispiel?</a>, <a href="#b1">Die Trennlinie</a> und <a href="#c1">Das nächste Wort</a>.</p></section>
+      <section class="teil"><h2><span class="nr">?</span>Was möchtest du herausfinden?</h2><ul class="fragen">${E.fragen.map(f => `<li>${esc(f)}</li>`).join('')}</ul><p class="text-links">Im Riff warten passende Stationen: <a href="#a1">Regel oder Beispiel?</a>, <a href="#b1">Die Trennlinie</a> und <a href="#c1">Das nächste Wort</a>.</p></section>
       <section class="teil"><h2><span class="nr">✎</span>Am Tisch</h2><p class="tisch"><span aria-hidden="true">🖐️</span><span>${esc(E.tisch)}</span></p></section>
       <section class="teil"><h2><span class="nr">✓</span>Mein Eintrag</h2><label class="eintrag-frage" for="eintrag">Was hast du entdeckt? Was möchtest du noch wissen?</label><textarea class="eintrag-feld" id="eintrag" rows="4">${esc(alt)}</textarea>
         <p class="fertig-zeile"><button type="button" class="knopf" id="fertig"><span aria-hidden="true">🧹</span> Fertig! Ich räume auf</button><span class="leise">Du entscheidest, wann du fertig bist.</span></p></section>

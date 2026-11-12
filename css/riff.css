@@ -50,7 +50,7 @@ h1, h2, h3 { line-height: 1.15; }
 h1, h2, h3, .logo, .nav a, .knopf, .karte-titel, .bereit-karte b, .modul0 strong, .riff-zaehler, .modul-zahl, .status, .kicker, .eintrag-kopf, .stempel-wort, .stempel-name, summary { font-family: var(--display); }
 a { color: inherit; }
 img { display: block; }
-:focus-visible { outline: 4px solid #0B63B5; outline-offset: 3px; border-radius: 10px; }
+:focus-visible { outline: 4px solid #FFD866; outline-offset: 3px; border-radius: 10px; }
 [hidden] { display: none !important; }
 
 /* Kopfzeile */
@@ -266,6 +266,23 @@ textarea { display: block; width: 100%; margin-top: 10px; padding: 10px; font: .
 .kontrollkarte[hidden] { display: none; }
 .kontrollkarte h3 { font-size: 1.25rem; }
 .kontroll-tabelle { min-width: 520px; }
+/* Am Handy steht jede Zeile der Kontrollkarte als Block, jede Zelle mit ihrem Spaltennamen. */
+@media (max-width: 639px) {
+  .kontroll-tabelle { min-width: 0; }
+  .kontroll-tabelle thead { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+  .kontroll-tabelle, .kontroll-tabelle tbody, .kontroll-tabelle tr, .kontroll-tabelle td { display: block; }
+  .kontroll-tabelle tr { margin-bottom: 10px; border: 1px solid var(--rand-leise); border-radius: 10px; overflow: hidden; }
+  .kontroll-tabelle td { border: 0; border-top: 1px solid var(--rand-leise); white-space: normal; }
+  .kontroll-tabelle td:first-child { border-top: 0; font-weight: 700; }
+  .kontroll-tabelle td[data-spalte]::before { content: attr(data-spalte); display: block; font-size: .85rem; font-weight: 700; color: var(--leise); }
+}
+/* Links mitten im Text: größere Tippfläche, ohne die Zeilen zu verschieben. */
+.text-links a { padding: 8px 2px; }
+/* Am Handy wird die Schrift im Riff-Bild sonst winzig. */
+@media (max-width: 639px) {
+  .riff-schild-text { font-size: 22px; }
+  .sonne-hinweis text { font-size: 26px; }
+}
 .kontroll-tabelle td:first-child { white-space: normal; font-weight: 400; }
 .kontroll-tabelle tr.anders td:nth-child(2) { font-weight: 700; background: color-mix(in srgb, var(--farbe) 30%, var(--papier)); }
 .anders-hinweis { display: block; font-size: .8rem; font-weight: 400; color: var(--leise); }
@@ -423,8 +440,13 @@ textarea { display: block; width: 100%; margin-top: 10px; padding: 10px; font: .
 .film-kopf h1 { font-size: clamp(1.7rem, 4.5vw, 2.4rem); }
 .film { display: grid; gap: 10px; padding: 14px; background: #123F66; border: 3px solid var(--linie); border-top: 0; border-radius: 0 0 22px 22px; color: #fff; }
 .film .leise { color: #C8E7F5; }
-.film-rahmen { overflow: hidden; background: #000; border-radius: 14px; }
-.film-rahmen canvas { display: block; width: 100%; height: auto; }
+.film-rahmen { position: relative; width: fit-content; max-width: 100%; margin-inline: auto; overflow: hidden; background: #000; border-radius: 14px; cursor: pointer; }
+/* Bild so hoch, dass Bild und Knopfleiste zusammen auf den Bildschirm passen (iPad quer, Tafel). */
+.film-rahmen canvas { display: block; width: auto; max-width: 100%; height: auto; max-height: calc(100svh - 250px); margin: auto; }
+.film-play { position: absolute; top: 18px; right: 18px; display: grid; place-items: center; width: 88px; height: 88px; padding-left: 8px; font-size: 2.4rem; color: #17324D; background: #FFC94A; border: 3px solid #17324D; border-radius: 50%; box-shadow: 0 4px 0 rgba(0, 0, 0, .55); pointer-events: none; transition: opacity .2s ease-out; }
+.film.spielt .film-play { opacity: 0; }
+@media (prefers-reduced-motion: reduce) { .film-play { transition: none; } }
+@media (max-width: 639px) { .film-play { top: 8px; right: 8px; width: 48px; height: 48px; padding-left: 4px; font-size: 1.3rem; } }
 .film-leiste { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 14px; }
 .film-leiste input { flex: 1 1 180px; min-width: 0; accent-color: #FFC94A; }
 .film-zeit { font-family: var(--mono); font-size: .9rem; }
@@ -504,11 +526,10 @@ body.kora-da #app { padding-bottom: 120px; }
 }
 
 /* Kontraste und Größen der kleinen Texte (mindestens 4,5:1, mindestens ca. 14px). */
-:root { --leise-karte: #3B5267; --status-fertig: #0A4F8F; --status-bereit: #08553E; }
 :root { --leise-karte: #E1EAF1; --status-fertig: #CBE6FB; --status-bereit: #B0F2D8; } /* immer dunkel */
 .status.fertig { color: var(--status-fertig); }
 .status.bereit { color: var(--status-bereit); }
-.karte-sub, .karte .dauer, .bereit-karte small { color: var(--leise-karte); }
+.karte-sub, .karte .dauer, .bereit-karte small, .station-kopf .dauer { color: var(--leise-karte); }
 .karte.abschluss { background: color-mix(in srgb, var(--farbe) 26%, var(--papier)); }
 .kicker { font-size: .95rem; }
 .status { font-size: .95rem; }
