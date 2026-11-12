@@ -609,3 +609,7 @@ html.film-gross-offen #kora-hilfe { display: none; }
   .kandidat { grid-template-columns: minmax(5em, 7em) minmax(0, 1fr) 3.400em; }
   .station-kopf { grid-template-columns: minmax(0, 1fr); }
 }
+
+/* Kein Doppeltipp-Zoom in Safari (Kinder tippen Knöpfe schnell hintereinander, Safari zoomte dann).
+   Zoomen mit zwei Fingern bleibt möglich. Flächen zum Ziehen oder Malen behalten ihr eigenes touch-action. (12.11.2026) */
+html, body, button, a, input, label, summary, select, textarea { touch-action: manipulation; }
