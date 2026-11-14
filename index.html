@@ -4,13 +4,15 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <!-- Content Security Policy: Der Browser fuehrt nur Skripte aus den
-       eigenen Dateien aus und laedt nichts von fremden Adressen.
+       eigenen Dateien aus und laedt sonst nichts von fremden Adressen.
+       Einzige Ausnahme (Konto-Umbau, 14.11.2026): Skripte von www.gstatic.com
+       (Firebase, unten mit Pruefsumme) und Verbindungen zu *.googleapis.com.
        Eingeschleuster Code (Inline-Skripte, Ereignis-Attribute, fremde
        Adressen) wird blockiert. Neue fremde Adresse = hier eintragen. -->
-  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self'; manifest-src 'self'; connect-src 'self'; media-src 'self'; base-uri 'none'; form-action 'self'; object-src 'none'">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self' https://www.gstatic.com; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self'; manifest-src 'self'; connect-src 'self' https://*.googleapis.com; media-src 'self'; base-uri 'none'; form-action 'self'; object-src 'none'">
   <meta name="robots" content="noindex, nofollow">
   <title>Tauchgang im KI-Korallenriff</title>
-  <meta name="description" content="Eine Lernseite für Klasse 3 und 4: Finde im Korallenriff heraus, wie Computer lernen, in deinem eigenen Tempo. Keine Punkte, keine Uhr, die drängelt.">
+  <meta name="description" content="Eine Lernseite für Klasse 3 und 4: Finde im Korallenriff heraus, wie Computer lernen, in deinem eigenen Tempo. Anmeldung mit dem Code vom Perlentaucher. Keine Punkte, keine Uhr, die drängelt.">
   <link rel="icon" href="bilder/kora.png">
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="apple-touch-icon" href="bilder/app-180.png">
@@ -18,8 +20,8 @@
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-title" content="Korallenriff">
   <meta name="theme-color" content="#5AB2E8">
-  <link rel="stylesheet" href="schriften/schriften.css?v=33">
-  <link rel="stylesheet" href="css/riff.css?v=33">
+  <link rel="stylesheet" href="schriften/schriften.css?v=34">
+  <link rel="stylesheet" href="css/riff.css?v=34">
 </head>
 <body>
   <header class="kopf">
@@ -28,22 +30,31 @@
       <nav class="nav" aria-label="Hauptnavigation">
         <a href="#riff" data-nav="riff">Das Riff</a>
         <a href="#heft" data-nav="heft">Mein Tauchbuch</a>
-        <a href="#wer" data-nav="wer" id="nav-wer" hidden>Kind wechseln</a>
+        <button type="button" id="nav-ab" hidden>Abmelden</button>
       </nav>
     </div>
   </header>
   <div id="vorschau-hinweis" class="vorschau-hinweis" hidden></div>
+  <div id="meldung" class="meldung" role="status" hidden></div>
   <main id="app" class="seite" tabindex="-1">
     <noscript><p>Diese Lernseite braucht JavaScript. Bitte schalte es im Browser ein.</p></noscript>
   </main>
   <footer class="fuss"><a href="impressum.html">Impressum</a> · <a href="datenschutz.html">Datenschutz</a></footer>
   <div id="kora-hilfe"></div>
   <div id="einblendung"></div>
-  <script src="js/riff-daten.js?v=33"></script>
-  <script src="js/riff-inhalte.js?v=33"></script>
-  <script src="js/riff-spiele.js?v=33"></script>
-  <script src="js/riff-film.js?v=33"></script>
-  <script src="js/riff-urkunde.js?v=33"></script>
-  <script src="js/riff.js?v=33"></script>
+  <script src="js/riff-daten.js?v=34"></script>
+  <script src="js/riff-inhalte.js?v=34"></script>
+  <script src="js/riff-spiele.js?v=34"></script>
+  <script src="js/riff-film.js?v=34"></script>
+  <script src="js/riff-urkunde.js?v=34"></script>
+  <script src="js/konto-abgleich.js?v=34"></script>
+  <script src="js/konto-speicher.js?v=34"></script>
+  <script src="js/konto-cloud.js?v=34"></script>
+  <script src="js/riff-speicher.js?v=34"></script>
+  <script src="js/riff.js?v=34"></script>
+  <!-- Gemeinsames Konto: Firebase (dieselbe Version und Pruefsumme wie im Perlentaucher), hinter den eigenen Skripten -->
+  <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js" integrity="sha384-ZaR6mWzmJtrRibZ1Vm7SoHFr8OXjyAuGAXalGDKqbxFT18oi/z+oZLIRFkpeNor1" crossorigin="anonymous"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js" integrity="sha384-I1LYojsZ5RM1cOda44Z2h42Qa6YfsQ1XkXxREnhp4ueYBR/4d1pG1K+NZM537Vsj" crossorigin="anonymous"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js" integrity="sha384-Ke0FJhH7LyRqDxZ0wt+/OXV38yfQVu7g9VPEEGjYmB4RVOY/ta04uecRhsMwT7V3" crossorigin="anonymous"></script>
 </body>
 </html>

@@ -7,67 +7,25 @@
   const STATIONEN = R.module.flatMap(m => m.stationen);
   const PER_ID = Object.fromEntries(STATIONEN.map(s => [s.id, s]));
 
-  /* ---------- Speicher: bleibt nur in diesem Browser ---------- */
-  const KEY = 'ki-korallenriff-v2', ALT_KEY = 'ki-korallenriff-v1', WER_KEY = 'ki-korallenriff-wer';
-  const leererSpeicher = () => ({ name: '', done: {}, stempel: {}, zeit: {}, eintraege: {}, ziele: {} });
-  /* Normalfall: Jedes Kind hat einen eigenen iPad-Account, also ein Kind pro Speicher. Es landet direkt in seinem Riff.
-     Sind doch mehrere Kinder angelegt, fragt die Seite pro Sitzung nach, damit niemand im fremden Riff landet. */
-  let kinder = [], aktivId = null, store = leererSpeicher();
-  const kinderSichern = () => {
-    try { localStorage.setItem(KEY, JSON.stringify({ kinder })); } catch (e) { /* Ohne Speicher läuft die Seite trotzdem. */ }
-  };
-  try {
-    const gespeichert = JSON.parse(localStorage.getItem(KEY) || 'null');
-    if (gespeichert && Array.isArray(gespeichert.kinder)) {
-      kinder = gespeichert.kinder.filter(k => k && k.id && k.name).map(k => Object.assign(leererSpeicher(), k));
-    } else {
-      const alt = JSON.parse(localStorage.getItem(ALT_KEY) || 'null');
-      if (alt && typeof alt === 'object' && (alt.name || Object.keys(alt.done || {}).length)) {
-        kinder = [Object.assign(leererSpeicher(), alt, { id: `k${Date.now()}`, name: alt.name || 'Mein Riff' })];
-        kinderSichern();
-        if (localStorage.getItem(KEY)) localStorage.removeItem(ALT_KEY);
-      }
-    }
-    const k = kinder.length === 1 ? kinder[0] : kinder.find(x => x.id === sessionStorage.getItem(WER_KEY));
-    if (k) { aktivId = k.id; store = k; }
-  } catch (e) { /* Ohne Speicher läuft die Seite trotzdem. */ }
-
-  /* Bittet den Browser, den Fortschritt nicht von selbst zu löschen. Ob er zustimmt, entscheidet der Browser. */
-  const speicherSchuetzen = () => {
-    try { if (navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(() => {}); } catch (e) { /* Dann bleibt es beim Normalfall. */ }
-  };
-
-  /* Vorschau zum Ansehen: index.html?vorschau=5 zeigt das Riff mit 5 fertigen Stationen.
-     Dabei wird nichts gespeichert. */
-  const vorschau = new URLSearchParams(location.search).get('vorschau');
-  const istVorschau = vorschau !== null && /^\d+$/.test(vorschau);
+  /* ---------- Speicher: js/riff-speicher.js (Konto-Umbau, 14.11.2026) ----------
+     Der Fortschritt liegt im Browser je Zugangscode und wird mit kr_stand/<code> abgeglichen.
+     Einträge bleiben nur auf diesem Gerät. store liest immer den aktuellen Stand, geschrieben wird nur über RS. */
+  const RS = window.RiffSpeicher, LK = window.LagunenKonto;
+  const S = RS.S, cloud = RS.cloud;
+  const store = RS.stand;
+  const istVorschau = RS.istVorschau;
+  const angemeldet = () => istVorschau || !!S.aktiv();
   if (istVorschau) {
-    const n = Math.min(+vorschau, STATIONEN.length);
-    store = leererSpeicher();
-    STATIONEN.slice(0, n).forEach((s, i) => {
-      store.done[s.id] = true;
-      store.stempel[s.id] = Date.now();
-      store.zeit[s.id] = (7 + i * 2) * 60;
-    });
-    if (n > 0) {
-      store.done.erz = true;
-      store.stempel.erz = Date.now();
-      store.zeit.erz = 11 * 60;
-      store.eintraege.a1 = { text: 'Beispiel-Eintrag: Eine Regel für jeden Clownfisch zu finden, ist echt schwer.', t: Date.now() };
-    }
-    R.module.forEach(m => {
-      m.ziele.forEach((z, i) => { if (store.done[z.station]) store.ziele[`${m.id}-${i}`] = 'kann'; });
-      if (m.stationen.every(s => store.done[s.id])) store.done[m.id] = true;
-    });
-    if (n > 1) store.eintraege.a2 = { text: 'Beispiel-Eintrag: Ähnliche Fische liegen nah beieinander.\nWarum eigentlich?', t: Date.now() };
     const h = document.getElementById('vorschau-hinweis');
     h.hidden = false;
-    h.textContent = `Vorschau mit ${n} fertigen Stationen. Hier wird nichts gespeichert.`;
+    h.textContent = `Vorschau mit ${STATIONEN.filter(s => store.done[s.id]).length} fertigen Stationen. Hier wird nichts gespeichert.`;
   }
-  const save = () => {
-    if (istVorschau || !aktivId) return;
-    kinderSichern();
-    speicherSchuetzen();
+  /* Kurze Meldung oben auf der Seite (z. B. nach dem Zurücksetzen durch die Lehrkraft) */
+  const melden = text => {
+    const m = document.getElementById('meldung');
+    if (!m) return;
+    m.textContent = text || '';
+    m.hidden = !text;
   };
 
   /* ---------- Lernzeit: läuft nur, solange eine Station sichtbar offen ist ---------- */
@@ -75,17 +33,20 @@
   const uhrStoppen = () => {
     if (!uhr) return;
     const sek = Math.min(1800, Math.round((Date.now() - uhr.start) / 1000));
-    if (sek > 3) { store.zeit[uhr.id] = (store.zeit[uhr.id] || 0) + sek; save(); }
+    const id = uhr.id;
     uhr = null;
+    if (sek > 3) RS.zeitDazu(id, sek);
   };
   const uhrStarten = id => { uhrStoppen(); uhr = { id, start: Date.now() }; };
   let wartendeUhr = null;
   let neuImRiff = null; /* Station, Modul oder Film, das gerade zum ersten Mal fertig wurde (siehe einblenden) */
+  /* Beim Verlassen erst die Lernzeit buchen, dann sofort abgleichen (sonst käme sie erst beim nächsten Öffnen an). */
+  const gleichSchreiben = () => { if (cloud.angemeldet()) cloud.schreiben().catch(() => {}); };
   document.addEventListener('visibilitychange', () => {
-    if (document.hidden) { wartendeUhr = uhr && uhr.id; uhrStoppen(); }
+    if (document.hidden) { wartendeUhr = uhr && uhr.id; uhrStoppen(); gleichSchreiben(); }
     else if (wartendeUhr) { uhrStarten(wartendeUhr); wartendeUhr = null; }
   });
-  window.addEventListener('pagehide', uhrStoppen);
+  window.addEventListener('pagehide', () => { uhrStoppen(); gleichSchreiben(); });
 
   /* ---------- Fortschritt ---------- */
   const fertig = id => !!store.done[id];
@@ -256,46 +217,72 @@ Beginne mit einer kurzen Begrüßung und frag, wobei du helfen kannst.`;
   }
 
   /* ---------- Ansichten ---------- */
-  function ansichtWer() {
-    const liste = kinder.map(k => `<button type="button" class="knopf wer-kind" data-kind="${esc(k.id)}">${esc(k.name)}</button>`).join('');
+  /* ---------- Anmelden mit dem Code (Konto-Umbau, 14.11.2026) ---------- */
+  const MOMENT = 'Einen Moment …';
+  const UNLESBAR = 'Dein gespeicherter Stand konnte nicht gelesen werden. Damit nichts verloren geht, bleibt er unverändert. Bitte sag deiner Lehrkraft Bescheid.';
+  /* Nur auf der Code-Eingabe und der Riff-Übersicht darf eine Antwort aus dem Netz die Ansicht von selbst wechseln. */
+  let ansicht = '';
+  const darfWechseln = () => ['code', 'riff'].includes(ansicht);
+
+  function ansichtCode(hinweis = '') {
+    ansicht = 'code';
     app.innerHTML = `
     <section class="hallo">
       <img class="hallo-kora" src="bilder/kora.png" alt="Kora, die Meeresschildkröte, winkt dir zu" width="200" height="200">
       <div class="blase">
-        <h1>${kinder.length ? 'Wer taucht heute?' : 'Hallo! Ich bin Kora.'}</h1>
-        ${kinder.length ? `<p>Tippe auf deinen Namen.</p><div class="wer-liste">${liste}</div>` : '<p>Schreib deinen Vornamen auf. Dann wächst hier dein eigenes Riff.</p>'}
-        <form class="name-zeile" id="wer-neu"><label for="vorname">${kinder.length ? 'Du bist neu? Wie heißt du?' : 'Wie heißt du?'}</label><input id="vorname" type="text" maxlength="20" placeholder="dein Vorname" autocomplete="off"><button type="submit" class="knopf">Los geht's</button><span class="leise" id="wer-meldung" role="status">Bleibt nur auf diesem Gerät.</span></form>
+        <h1>Hallo! Ich bin Kora.</h1>
+        <p>Gib deinen Code ein. Es ist derselbe Code wie beim Perlentaucher. Dann wächst hier dein eigenes Riff.</p>
+        <form class="name-zeile" id="code-form" novalidate><label for="code">Dein Code</label><input id="code" type="text" maxlength="12" autocomplete="off" autocapitalize="characters" autocorrect="off" spellcheck="false" aria-describedby="code-hinweis code-info"><button type="submit" class="knopf">Los geht's</button><span class="leise" id="code-hinweis" role="status">${esc(hinweis)}</span></form>
+        <p class="leise" id="code-info">Dein Code hat 8 Zeichen: Buchstaben und Zahlen.</p>
       </div>
     </section>`;
-    const waehlen = k => {
-      aktivId = k.id;
-      store = k;
-      try { sessionStorage.setItem(WER_KEY, k.id); } catch (e) { /* Dann fragt die Seite beim nächsten Öffnen wieder. */ }
-      if (location.hash === '#wer') location.hash = 'riff'; else route();
-    };
-    app.querySelector('.wer-liste')?.addEventListener('click', e => {
-      const b = e.target.closest('[data-kind]');
-      const k = b && kinder.find(x => x.id === b.dataset.kind);
-      if (k) waehlen(k);
-    });
-    document.getElementById('wer-neu').addEventListener('submit', e => {
+    document.getElementById('code-form').addEventListener('submit', e => {
       e.preventDefault();
-      const name = document.getElementById('vorname').value.trim();
-      const meldung = document.getElementById('wer-meldung');
-      if (!name) { meldung.textContent = 'Schreib bitte zuerst deinen Vornamen auf.'; return; }
-      if (kinder.some(k => k.name.toLowerCase() === name.toLowerCase())) {
-        meldung.textContent = `${name} gibt es schon. Tippe oben auf den Namen. Heißt ein anderes Kind genauso? Dann schreib zum Beispiel ${name} B.`;
-        return;
-      }
-      const k = Object.assign(leererSpeicher(), { id: `k${Date.now()}`, name });
-      kinder.push(k);
-      kinderSichern();
-      speicherSchuetzen();
-      waehlen(k);
+      const knopf = e.target.querySelector('button[type="submit"]');
+      if (knopf.disabled) return;
+      knopf.disabled = true;
+      document.getElementById('code-hinweis').textContent = MOMENT;
+      cloud.anmelden(document.getElementById('code').value).then(nachAnmelden, () => nachAnmelden({ ok: false, grund: cloud.TEXT.sonst }));
     });
   }
 
+  /* Ergebnis von cloud.anmelden() oder cloud.start() anzeigen */
+  function nachAnmelden(r) {
+    if (!r.ok) {
+      if (ansicht === 'code' && document.getElementById('code')) {
+        app.querySelector('#code-form button[type="submit"]').disabled = false;
+        document.getElementById('code-hinweis').textContent = r.grund || '';
+        document.getElementById('code').focus();
+      } else ansichtCode(r.grund);
+      return;
+    }
+    route();
+    if (r.gespeichert === false) melden('Dein Stand konnte auf diesem Gerät nicht gespeichert werden. Bitte sag deiner Lehrkraft Bescheid.');
+  }
+
+  /* Zeile auf der Riff-Übersicht, wenn der Stand gerade nicht in der Datenbank ankommt */
+  function netzText() {
+    const z = cloud.zustand().art;
+    if (z === 'lokal') return 'Gerade ohne Internet. Dein Riff bleibt auf diesem Gerät und wird später abgeglichen.';
+    if (z === 'fehler') return 'Dein Riff konnte gerade nicht im Internet gespeichert werden. Es bleibt auf diesem Gerät. Bitte sag deiner Lehrkraft Bescheid.';
+    return '';
+  }
+  cloud.beiZustand(() => {
+    const p = document.getElementById('netz-zeile');
+    if (p) { p.textContent = netzText(); p.hidden = !p.textContent; }
+  });
+
+  function abmelden() {
+    const knopf = document.getElementById('nav-ab');
+    knopf.disabled = true;
+    uhrStoppen();
+    wartendeUhr = null;
+    const fertig = () => { knopf.disabled = false; melden(''); if (location.hash && location.hash !== '#riff') history.replaceState(null, '', location.pathname); route(); };
+    cloud.abmelden().then(fertig, fertig);
+  }
+
   function ansichtRiff() {
+    ansicht = 'riff';
     const gruss = store.name ? `Hallo, ${esc(store.name)}! Ich bin Kora.` : 'Hallo! Ich bin Kora.';
     app.innerHTML = `
     <section class="hallo">
@@ -303,7 +290,7 @@ Beginne mit einer kurzen Begrüßung und frag, wobei du helfen kannst.`;
       <div class="blase">
         <h1 id="gruss">${gruss}</h1>
         <p>Komm mit ins Korallenriff! Hier findest du selbst heraus, wie Computer lernen. Such dir etwas aus, probier es aus, so lange du magst, und räum es danach wieder auf.</p>
-        ${kinder.length > 1 ? `<p class="leise">Du bist nicht ${esc(store.name)}? <a href="#wer">Kind wechseln</a></p>` : ''}
+        <p id="netz-zeile" class="leise netz-zeile"${netzText() ? '' : ' hidden'}>${esc(netzText())}</p>
       </div>
     </section>
 
@@ -340,7 +327,7 @@ Beginne mit einer kurzen Begrüßung und frag, wobei du helfen kannst.`;
     <div class="erwachsene-bereich">
       <details class="erwachsene"><summary>Für Lehrkräfte &amp; Eltern: Das Lern-Konzept im Korallenriff</summary>
         <p>Das Korallenriff ist eine vorbereitete Umgebung für Kinder der Klassen 3 und 4 (8 bis 10 Jahre). Es erklärt, wie Künstliche Intelligenz funktioniert; das Riff liefert die Beispiele und die Bilder. Die Kinder wählen frei aus dem, was gerade offen ist, und kontrollieren ihre Lösungen selbst. Statt Punkten, Abzeichen und Ranglisten wächst ein Riff.</p>
-        <p>Kora ist ein Tipp-Tutor ohne künstliche Intelligenz: Zu jeder Station gibt es drei gestufte Tipps, eine zweite Erklärung, die Wortkarten und Antworten auf typische Kinderfragen zu KI. Es werden keine Daten gesendet, es braucht kein Konto und kein Internet. Fortschritt, Name und Einträge bleiben nur in diesem Browser.</p>
+        <p>Kora ist ein Tipp-Tutor ohne künstliche Intelligenz: Zu jeder Station gibt es drei gestufte Tipps, eine zweite Erklärung, die Wortkarten und Antworten auf typische Kinderfragen zu KI. Kora selbst sendet keine Daten und braucht kein Internet.</p>
         <div class="tabelle-scroll"><table><thead><tr><th scope="col">Prinzip</th><th scope="col">Umsetzung</th></tr></thead><tbody>${R.konzept.map(([a, b]) => `<tr><td>${esc(a)}</td><td>${esc(b)}</td></tr>`).join('')}</tbody></table></div>
       </details>
       <details class="erwachsene"><summary>Für Erwachsene: Kora (das Maskottchen) in ChatGPT, Gemini oder Claude nutzen</summary>
@@ -374,7 +361,9 @@ Beginne mit einer kurzen Begrüßung und frag, wobei du helfen kannst.`;
     };
     return `<details class="erwachsene lehrkraft"><summary>Für Lehrkräfte: Einsatz im Unterricht und fachlicher Bezug</summary>
         <h3>Kurz gesagt</h3>
-        <p>Die Kinder lernen in 9 Stationen, wie Künstliche Intelligenz funktioniert, ohne selbst eine KI zu benutzen. Die Seite enthält keine KI, braucht kein Konto und speichert alles nur im Browser des Geräts.</p>
+        <p>Die Kinder lernen in 9 Stationen, wie Künstliche Intelligenz funktioniert, ohne selbst eine KI zu benutzen. Die Seite enthält keine KI.</p>
+        <h3>Anmeldung und Daten</h3>
+        <p>Die Kinder melden sich mit ihrem Code vom Perlentaucher an (Code eintippen oder Aufkleber scannen). Der Fortschritt (geschaffte Stationen, Stempel, Lernzeit, Selbsteinschätzung) wird unter dem Code gespeichert und ist auf jedem Gerät da. Die eigenen Einträge der Kinder bleiben nur auf dem Gerät, auf dem sie geschrieben wurden. Zurücksetzen, Auskunft und Löschen gehen über den Lehrerbereich des Perlentauchers. Einzelheiten stehen auf der Seite <a href="datenschutz.html">Datenschutz</a>.</p>
 
         <h3>Ablauf und Zeitbedarf</h3>
         <ul>
@@ -383,7 +372,7 @@ Beginne mit einer kurzen Begrüßung und frag, wobei du helfen kannst.`;
           <li>4 Modul-Abschlüsse: je ca. 5 Min.</li>
         </ul>
         <p>Zusammen ca. ${summe} Minuten reine Arbeitszeit, ohne die Aufgaben „Am Tisch“. Gut planbar sind 3 bis 4 Unterrichtsstunden. Die Kinder wählen frei; die empfohlene Reihenfolge steht auf der Startseite bei jeder Station („erst: …“), gesperrt wird nichts. Eine sinnvolle Abfolge: Modul 0, dann „Regel oder Beispiel?“, danach die Module in ihrer Reihenfolge.</p>
-        <p><b>Tipp für iPads:</b> Die Seite in Safari öffnen, auf „Teilen“ tippen und „Zum Home-Bildschirm“ wählen. Dann startet das Riff wie eine App mit Kora als Symbol, und Safari löscht den Stand nicht, wenn die Seite länger nicht geöffnet wurde. Wichtig: Die App auf dem Home-Bildschirm hat einen eigenen Speicher. Ein in Safari begonnenes Riff ist dort nicht zu sehen. Am besten richten die Kinder das Symbol gleich am Anfang ein und starten danach immer darüber.</p>
+        <p><b>Tipp für iPads:</b> Die Seite in Safari öffnen, auf „Teilen“ tippen und „Zum Home-Bildschirm“ wählen. Dann startet das Riff wie eine App mit Kora als Symbol. Die App auf dem Home-Bildschirm hat einen eigenen Speicher: Das Kind meldet sich dort einmal mit seinem Code an, danach ist sein Riff da. Die Einträge aus Safari sind in der App nicht zu sehen. Am besten richten die Kinder das Symbol gleich am Anfang ein und starten danach immer darüber.</p>
 
         <h3>Material für „Am Tisch“</h3>
         <ul class="lehrkraft-material">${zeilen.map(s => `<li><b>${esc(s.titel)}:</b> ${esc(B[s.id].material)}</li>`).join('')}</ul>
@@ -406,7 +395,7 @@ Beginne mit einer kurzen Begrüßung und frag, wobei du helfen kannst.`;
     app.innerHTML = `
     <section class="hallo klein">
       <img class="hallo-kora" src="bilder/kora.png" alt="" width="200" height="200">
-      <div class="blase"><h1>Mein Tauchbuch${store.name ? ` von ${esc(store.name)}` : ''}</h1><p>Hier siehst du, was du schon entdeckt hast. Es gibt keine Punkte. Dein Riff wächst mit jedem Material, das du fertig machst.</p>${istVorschau || !store.name ? '' : '<div class="name-aendern" id="name-aendern"></div>'}</div>
+      <div class="blase"><h1>Mein Tauchbuch${store.name ? ` von ${esc(store.name)}` : ''}</h1><p>Hier siehst du, was du schon entdeckt hast. Es gibt keine Punkte. Dein Riff wächst mit jedem Material, das du fertig machst.</p></div>
     </section>
     <h2 class="abschnitt">Mein Riff</h2>
     ${riffBlock()}
@@ -428,12 +417,9 @@ Beginne mit einer kurzen Begrüßung und frag, wobei du helfen kannst.`;
     <section class="heft-teil urkunde-teil meer" id="urkunde"><h2>Meine Urkunde</h2>${urkundeBlock()}</section>
 
     <section class="heft-teil neu-anfangen"><h2>Neu anfangen</h2>
-      <p class="leise">Löscht dein Riff, deine Stempel, deine Lernzeit und alle Einträge auf diesem Gerät.</p>
-      <div id="reset" class="reset-zeile"></div>
+      <p class="leise">Möchtest du mit einem leeren Riff von vorn anfangen? Dann sag es deiner Lehrkraft.</p>
     </section>`;
-    resetEinrichten();
     urkundeEinrichten();
-    nameEinrichten();
     const knopf = document.getElementById('eintraege-kopieren');
     if (knopf) knopf.addEventListener('click', () => kopieren(eintragPunkte().map(e => `${e.titel}\n${e.text}`).join('\n\n'), document.getElementById('eintraege-status'), document.getElementById('eintraege-feld')));
   }
@@ -562,66 +548,6 @@ Beginne mit einer kurzen Begrüßung und frag, wobei du helfen kannst.`;
         status.textContent = 'Geschickt! Super gemacht.';
       } catch (err) {
         status.textContent = err && err.name === 'AbortError' ? 'Nicht geschickt. Du kannst es noch einmal versuchen.' : 'Teilen hat nicht geklappt. Tippe auf „Ansehen“ und speichere die Datei.';
-      }
-    });
-  }
-
-  /* Name ändern, zum Beispiel nach einem Tippfehler. Nur der Name ändert sich, das Riff bleibt. */
-  function nameEinrichten() {
-    const box = document.getElementById('name-aendern');
-    if (!box) return;
-    const start = (meldung = '') => {
-      box.innerHTML = `<button type="button" class="knopf leise-knopf klein-knopf" id="name-start">Name ändern</button>${meldung ? `<span class="leise" role="status">${meldung}</span>` : ''}`;
-    };
-    start();
-    box.addEventListener('click', e => {
-      if (e.target.id === 'name-start') {
-        box.innerHTML = `<form class="name-zeile" id="name-form"><label for="name-neu">Dein Vorname</label><input id="name-neu" type="text" maxlength="20" autocomplete="off" value="${esc(store.name)}"><button type="submit" class="knopf">Speichern</button><button type="button" class="knopf leise-knopf" id="name-nein">Abbrechen</button><span class="leise" id="name-meldung" role="status"></span></form>`;
-        const feld = document.getElementById('name-neu');
-        feld.focus();
-        feld.select();
-        document.getElementById('name-form').addEventListener('submit', ev => {
-          ev.preventDefault();
-          const name = feld.value.trim();
-          const meldung = document.getElementById('name-meldung');
-          if (!name) { meldung.textContent = 'Schreib bitte deinen Vornamen auf.'; return; }
-          if (name === store.name) { start(); return; }
-          if (kinder.some(k => k !== store && k.name.toLowerCase() === name.toLowerCase())) {
-            meldung.textContent = `${name} gibt es auf diesem Gerät schon. Schreib zum Beispiel ${name} B.`;
-            return;
-          }
-          store.name = name;
-          kinderSichern();
-          ansichtHeft();
-          const neu = document.getElementById('name-aendern');
-          if (neu) neu.querySelector('#name-start').insertAdjacentHTML('afterend', '<span class="leise" role="status">Gespeichert!</span>');
-        });
-      } else if (e.target.id === 'name-nein') {
-        start();
-      }
-    });
-  }
-
-  function resetEinrichten() {
-    const box = document.getElementById('reset');
-    const start = () => {
-      box.innerHTML = `<button type="button" class="knopf leise-knopf" id="reset-start"${istVorschau ? ' disabled' : ''}>Alles löschen / Neu anfangen</button>${istVorschau ? '<span class="leise">In der Vorschau wird nichts gelöscht.</span>' : ''}`;
-    };
-    start();
-    box.addEventListener('click', e => {
-      if (e.target.id === 'reset-start') {
-        box.innerHTML = `<strong>Wirklich dein ganzes Riff und deine Einträge löschen?</strong> Die Riffe der anderen Kinder bleiben. <button type="button" class="knopf" id="reset-ja">Ja, alles löschen</button> <button type="button" class="knopf leise-knopf" id="reset-nein">Nein, behalten</button>`;
-        document.getElementById('reset-nein').focus();
-      } else if (e.target.id === 'reset-nein') {
-        start();
-      } else if (e.target.id === 'reset-ja') {
-        uhr = null;
-        kinder = kinder.filter(k => k !== store);
-        store = leererSpeicher();
-        aktivId = null;
-        kinderSichern();
-        try { sessionStorage.removeItem(WER_KEY); } catch (err) { /* Nichts weiter zu tun */ }
-        location.hash = 'riff';
       }
     });
   }
@@ -810,7 +736,7 @@ Beginne mit einer kurzen Begrüßung und frag, wobei du helfen kannst.`;
       <section class="teil"><h2><span class="nr">3</span>Kontrolle</h2><p class="leise">Wenn du so weit bist, holst du dir die Kontrollkarte und vergleichst selbst.</p><p><button type="button" class="knopf" id="kontrolle-knopf" aria-expanded="false" aria-controls="kontrollkarte">Kontrollkarte holen</button></p><div class="kontrollkarte" id="kontrollkarte" hidden></div></section>
       <section class="teil"><h2><span class="nr">4</span>Neue Wörter</h2><div class="wortbereich" id="woerter"></div></section>
       <section class="teil"><h2><span class="nr">5</span>Am Tisch</h2><p class="tisch"><span aria-hidden="true">🖐️</span><span>${esc(x.tisch)}</span></p></section>
-      <section class="teil"><h2><span class="nr">6</span>Mein Eintrag</h2><label class="eintrag-frage" for="eintrag">Was hast du entdeckt? Was möchtest du noch wissen?</label><textarea class="eintrag-feld" id="eintrag" rows="4" aria-describedby="eintrag-hinweis">${esc(alt)}</textarea><p class="leise" id="eintrag-hinweis">Schreib hier nichts Privates hinein, zum Beispiel keinen Nachnamen und keine Adresse.</p>
+      <section class="teil"><h2><span class="nr">6</span>Mein Eintrag</h2><label class="eintrag-frage" for="eintrag">Was hast du entdeckt? Was möchtest du noch wissen?</label><textarea class="eintrag-feld" id="eintrag" rows="4" maxlength="${RS.EINTRAG_MAX}" aria-describedby="eintrag-hinweis">${esc(alt)}</textarea><p class="leise" id="eintrag-hinweis">Schreib hier nichts Privates hinein, zum Beispiel keinen Nachnamen und keine Adresse.</p>
         <p class="fertig-zeile"><button type="button" class="knopf" id="fertig"><span aria-hidden="true">🧹</span> Fertig! Ich räume auf</button><span class="leise">Du entscheidest, wann du fertig bist.</span></p></section>
       <details class="erwachsene"><summary>Für Erwachsene: Kora in ChatGPT, Gemini oder Claude nutzen</summary>
         <p>Dieser Prompt macht aus Ihrem eigenen KI-Werkzeug einen Lernbegleiter für genau diese Station. Bitte nur gemeinsam mit dem Kind nutzen und nur mit einem Werkzeug, das Ihre Schule erlaubt. <strong>Keine Namen oder Fotos des Kindes eingeben.</strong></p>
@@ -849,13 +775,10 @@ Beginne mit einer kurzen Begrüßung und frag, wobei du helfen kannst.`;
     });
     wortKarten(document.getElementById('woerter'), x.woerter);
     const feld = document.getElementById('eintrag');
-    feld.addEventListener('input', () => { store.eintraege[s.id] = { text: feld.value, t: Date.now() }; save(); });
+    feld.addEventListener('input', () => { RS.eintragSetzen(s.id, feld.value); });
     document.getElementById('fertig').addEventListener('click', () => {
       uhrStoppen();
-      const erstes = !store.done[s.id];
-      store.done[s.id] = (store.done[s.id] || 0) + 1;
-      if (erstes) store.stempel[s.id] = Date.now();
-      save();
+      const erstes = RS.fertigMachen(s.id);
       einblenden(`<span class="stempel gross ${m.farbe}" aria-hidden="true"><span class="stempel-icon">${s.icon}</span><span class="stempel-wort">ENTDECKT</span></span><h2>Gestempelt!</h2><p>${erstes ? 'In deinem Riff wächst eine neue Koralle.' : 'Schön, dass du wiederholt hast.'}</p>`, erstes ? s.id : null);
     });
     document.getElementById('station-prompt-kopieren').addEventListener('click', () => kopieren(prompt, document.getElementById('station-prompt-status'), document.getElementById('station-prompt')));
@@ -883,7 +806,7 @@ Beginne mit einer kurzen Begrüßung und frag, wobei du helfen kannst.`;
       <section class="teil"><h2><span class="nr">1</span>Deine Stationen</h2><div class="karten">${m.stationen.map(stationKarte).join('')}</div></section>
       <section class="teil"><h2><span class="nr">2</span>Was kannst du jetzt?</h2><p class="leise">Schätze dich selbst ein. Das sieht niemand außer dir.</p><ul class="ziele" id="ziele">${m.ziele.map(zielZeile).join('')}</ul></section>
       <section class="teil"><h2><span class="nr">3</span>Denk weiter</h2><p class="tisch"><span aria-hidden="true">🔍</span><span>${esc(x.frage)}</span></p>
-        <label class="eintrag-frage" for="weiter">Deine Antwort</label><textarea class="eintrag-feld" id="weiter" rows="4" aria-describedby="weiter-hinweis">${esc(alt)}</textarea><p class="leise" id="weiter-hinweis">Schreib hier nichts Privates hinein, zum Beispiel keinen Nachnamen und keine Adresse.</p>
+        <label class="eintrag-frage" for="weiter">Deine Antwort</label><textarea class="eintrag-feld" id="weiter" rows="4" maxlength="${RS.EINTRAG_MAX}" aria-describedby="weiter-hinweis">${esc(alt)}</textarea><p class="leise" id="weiter-hinweis">Schreib hier nichts Privates hinein, zum Beispiel keinen Nachnamen und keine Adresse.</p>
         <p class="fertig-zeile"><button type="button" class="knopf" id="kontrolle-knopf" aria-expanded="false" aria-controls="kontrollkarte">Kontrollkarte holen</button></p><div class="kontrollkarte" id="kontrollkarte" hidden><h3>Kontrollkarte</h3><p>${esc(x.kontrolle)}</p></div></section>
       <section class="teil"><p class="fertig-zeile"><button type="button" class="knopf" id="modul-fertig">Modul abschließen</button><span class="leise">${modulZahl(m)} von ${m.stationen.length} Stationen entdeckt. Du entscheidest, wann du so weit bist.</span></p></section>
     </article>`;
@@ -891,12 +814,11 @@ Beginne mit einer kurzen Begrüßung und frag, wobei du helfen kannst.`;
       const b = e.target.closest('[data-ziel]');
       if (!b) return;
       const i = +b.dataset.ziel;
-      store.ziele[`${m.id}-${i}`] = b.dataset.wert;
-      save();
+      RS.zielSetzen(`${m.id}-${i}`, b.dataset.wert);
       b.closest('li').outerHTML = zielZeile(m.ziele[i], i);
     });
     const feld = document.getElementById('weiter');
-    feld.addEventListener('input', () => { store.eintraege[schluessel] = { text: feld.value, t: Date.now() }; save(); });
+    feld.addEventListener('input', () => { RS.eintragSetzen(schluessel, feld.value); });
     const kk = document.getElementById('kontrollkarte'), knopf = document.getElementById('kontrolle-knopf');
     knopf.addEventListener('click', () => {
       kk.hidden = !kk.hidden;
@@ -905,10 +827,7 @@ Beginne mit einer kurzen Begrüßung und frag, wobei du helfen kannst.`;
     });
     document.getElementById('modul-fertig').addEventListener('click', () => {
       uhrStoppen();
-      const erstes = !store.done[m.id];
-      store.done[m.id] = (store.done[m.id] || 0) + 1;
-      if (erstes) store.stempel[m.id] = Date.now();
-      save();
+      const erstes = RS.fertigMachen(m.id);
       einblenden(`<span class="stempel gross ${m.farbe}" aria-hidden="true"><span class="stempel-icon">🏁</span><span class="stempel-wort">MODUL ${m.nr}</span></span><h2>Modul ${m.nr} geschafft!</h2><p>${erstes ? 'In deinem Riff wächst jetzt eine Riff-Pflanze.' : 'Du hast das Modul noch einmal abgeschlossen.'}</p>`, erstes ? m.id : null);
     });
     kora.setzen({ titel: `Modul ${m.nr}: ${m.titel}`, woerter: [], hilfe: R.abschlussHilfe });
@@ -1089,7 +1008,7 @@ Beginne mit einer kurzen Begrüßung und frag, wobei du helfen kannst.`;
       <section class="teil"><h2>Die Zeitleiste</h2><p>Sie ist maßstabsgetreu: Jeder kleine Strich steht für zehn Jahre. Schau, wie lange fast nichts passiert und wie eng es ganz unten wird!</p>${F.zeitleiste()}</section>
       <section class="teil"><h2><span class="nr">?</span>Was möchtest du herausfinden?</h2><ul class="fragen">${E.fragen.map(f => `<li>${esc(f)}</li>`).join('')}</ul><p class="text-links">Im Riff warten passende Stationen: <a href="#a1">Regel oder Beispiel?</a>, <a href="#b1">Die Trennlinie</a> und <a href="#c1">Das nächste Wort</a>.</p></section>
       <section class="teil"><h2><span class="nr">✎</span>Am Tisch</h2><p class="tisch"><span aria-hidden="true">🖐️</span><span>${esc(E.tisch)}</span></p></section>
-      <section class="teil"><h2><span class="nr">✓</span>Mein Eintrag</h2><label class="eintrag-frage" for="eintrag">Was hast du entdeckt? Was möchtest du noch wissen?</label><textarea class="eintrag-feld" id="eintrag" rows="4" aria-describedby="eintrag-hinweis">${esc(alt)}</textarea><p class="leise" id="eintrag-hinweis">Schreib hier nichts Privates hinein, zum Beispiel keinen Nachnamen und keine Adresse.</p>
+      <section class="teil"><h2><span class="nr">✓</span>Mein Eintrag</h2><label class="eintrag-frage" for="eintrag">Was hast du entdeckt? Was möchtest du noch wissen?</label><textarea class="eintrag-feld" id="eintrag" rows="4" maxlength="${RS.EINTRAG_MAX}" aria-describedby="eintrag-hinweis">${esc(alt)}</textarea><p class="leise" id="eintrag-hinweis">Schreib hier nichts Privates hinein, zum Beispiel keinen Nachnamen und keine Adresse.</p>
         <p class="fertig-zeile"><button type="button" class="knopf" id="fertig"><span aria-hidden="true">🧹</span> Fertig! Ich räume auf</button><span class="leise">Du entscheidest, wann du fertig bist.</span></p></section>
       <details class="erwachsene"><summary>Für Erwachsene: Kora in ChatGPT, Gemini oder Claude nutzen</summary>
         <p>Dieser Prompt macht aus Ihrem eigenen KI-Werkzeug einen Lernbegleiter für diesen Film. Bitte nur gemeinsam mit dem Kind nutzen und nur mit einem Werkzeug, das Ihre Schule erlaubt. <strong>Keine Namen oder Fotos des Kindes eingeben.</strong></p>
@@ -1099,14 +1018,11 @@ Beginne mit einer kurzen Begrüßung und frag, wobei du helfen kannst.`;
     </article>`;
     filmEinrichten(document.getElementById('film'));
     const feld = document.getElementById('eintrag');
-    feld.addEventListener('input', () => { store.eintraege[id] = { text: feld.value, t: Date.now() }; save(); });
+    feld.addEventListener('input', () => { RS.eintragSetzen(id, feld.value); });
     document.getElementById('fertig').addEventListener('click', () => {
       if (filmStopp) filmStopp();
       uhrStoppen();
-      const erstes = !store.done[id];
-      store.done[id] = (store.done[id] || 0) + 1;
-      if (erstes) store.stempel[id] = Date.now();
-      save();
+      const erstes = RS.fertigMachen(id);
       einblenden(`<span class="stempel gross erz" aria-hidden="true"><span class="stempel-icon">🎬</span><span class="stempel-wort">ENTDECKT</span></span><h2>Gestempelt!</h2><p>${erstes ? 'In deinem Riff scheint jetzt die Sonne.' : 'Schön, dass du wiederholt hast.'}</p>`, erstes ? id : null);
     });
     document.getElementById('station-prompt-kopieren').addEventListener('click', () => kopieren(prompt, document.getElementById('station-prompt-status'), document.getElementById('station-prompt')));
@@ -1119,22 +1035,23 @@ Beginne mit einer kurzen Begrüßung und frag, wobei du helfen kannst.`;
     const station = PER_ID[ziel];
     const modulSeite = R.module.find(m => m.id === ziel);
     const aufHeft = ziel === 'heft';
-    const aufWer = !istVorschau && (ziel === 'wer' || !aktivId);
-    document.getElementById('nav-wer').hidden = istVorschau || kinder.length < 2;
+    const aufCode = !angemeldet();
+    document.getElementById('nav-ab').hidden = istVorschau || aufCode;
+    ansicht = '';
     uhrStoppen();
     wartendeUhr = null;
     kora.leeren();
     if (filmStopp) { filmStopp(); filmStopp = null; }
     document.getElementById('einblendung').innerHTML = '';
-    if (aufWer) { /* Solange kein Kind gewählt ist, läuft keine Uhr. */ }
+    if (aufCode) { /* Solange niemand angemeldet ist, läuft keine Uhr. */ }
     else if (ziel === 'modul0') uhrStarten(R.erzaehlung.id);
     else if (station) uhrStarten(station.id);
     else if (modulSeite) uhrStarten(modulSeite.id);
     document.querySelectorAll('[data-nav]').forEach(a => {
-      const aktiv = a.dataset.nav === (aufWer ? 'wer' : aufHeft ? 'heft' : 'riff');
+      const aktiv = !aufCode && a.dataset.nav === (aufHeft ? 'heft' : 'riff');
       if (aktiv) a.setAttribute('aria-current', 'page'); else a.removeAttribute('aria-current');
     });
-    if (aufWer) ansichtWer();
+    if (aufCode) ansichtCode();
     else if (aufHeft) ansichtHeft();
     else if (ziel === 'modul0') ansichtErzaehlung();
     else if (station && R.inhalte[station.id]) {
@@ -1151,7 +1068,7 @@ Beginne mit einer kurzen Begrüßung und frag, wobei du helfen kannst.`;
     einblendungSperre(false);
     /* Browser-Tab zeigt, wo man ist. Beim Wechsel bekommt die Überschrift den Fokus, damit Screenreader die neue Ansicht ansagen. */
     const h1 = app.querySelector('h1');
-    const name = aufWer ? (kinder.length ? 'Wer taucht heute?' : '') : aufHeft ? 'Mein Tauchbuch' : (!station && !modulSeite && ziel !== 'modul0') ? 'Das Riff' : (h1 ? h1.textContent.trim() : '');
+    const name = aufCode ? 'Anmelden' : aufHeft ? 'Mein Tauchbuch' : (!station && !modulSeite && ziel !== 'modul0') ? 'Das Riff' : (h1 ? h1.textContent.trim() : '');
     document.title = name ? `${name} – Tauchgang im KI-Korallenriff` : 'Tauchgang im KI-Korallenriff';
     if (h1 && !ersterAufruf) { h1.tabIndex = -1; h1.focus({ preventScroll: true }); }
     ersterAufruf = false;
@@ -1160,5 +1077,45 @@ Beginne mit einer kurzen Begrüßung und frag, wobei du helfen kannst.`;
   }
   let ersterAufruf = true;
   window.addEventListener('hashchange', route);
-  route();
+  document.getElementById('nav-ab').addEventListener('click', abmelden);
+
+  /* Die Lehrkraft hat den Stand zurückgesetzt: Das Gerät hat seinen Stand verworfen (js/konto-cloud.js). */
+  cloud.beiNeustart(() => {
+    if (darfWechseln() || ansicht === '') route();
+    melden('Deine Lehrkraft hat dein Riff neu gestartet. Du fängst von vorn an.');
+  });
+
+  /* ---------- Start ----------
+     Was das Gerät schon weiß, steht sofort da. Die Antwort aus dem Netz kommt nach.
+     Der Aufkleber führt auf die Seite mit #c=CODE am Ende. */
+  function starten() {
+    if (istVorschau) { route(); return; }
+    const qr = LK.adresse.code(), spur = LK.adresse.spur();
+    LK.adresse.saeubern();
+    if (qr) {
+      /* Ein gescannter Code hat Vorrang vor dem Kind, das im Tab noch angemeldet ist. */
+      if (S.aktiv() && S.code() !== qr) S.abmelden();
+      route();
+      if (!S.aktiv()) document.getElementById('code-hinweis').textContent = MOMENT;
+      cloud.anmelden(qr).then(r => { if (darfWechseln()) { if (!r.ok) ansichtCode(r.grund); else nachAnmelden(r); } }, () => {});
+      return;
+    }
+    route();
+    if (S.ladeFehler) melden(UNLESBAR);
+    if (spur && ansicht === 'code') document.getElementById('code-hinweis').textContent = 'Der Code wurde nicht ganz gelesen. Tippe ihn bitte ein.';
+    const gemerkt = S.code();
+    cloud.start().then(r => {
+      if (r.ok) { if (darfWechseln()) nachAnmelden(r); return null; }
+      if (r.grund) return r;
+      /* Firebase kennt niemanden, der Tab aber schon: mit dem gemerkten Code anmelden */
+      return gemerkt && S.code() === gemerkt ? cloud.anmelden(gemerkt) : null;
+    }).then(r => {
+      if (!r) return;
+      if (r.ok) { if (ansicht === 'riff') route(); return; }
+      /* Die Lehrkraft hat den Code gesperrt: nicht auf dem Gerät weitermachen lassen */
+      if (r.grund === cloud.TEXT.gesperrt && S.aktiv()) { S.abmelden(); route(); ansichtCode(r.grund); }
+    }, () => {});
+  }
+  starten();
+  window.RIFF_APP = { route, melden };
 })();

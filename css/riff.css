@@ -47,7 +47,7 @@ body {
 }
 h1, h2, h3, p, ul { margin: 0; }
 h1, h2, h3 { line-height: 1.15; }
-h1, h2, h3, .logo, .nav a, .knopf, .karte-titel, .bereit-karte b, .modul0 strong, .riff-zaehler, .modul-zahl, .status, .kicker, .eintrag-kopf, .stempel-wort, .stempel-name, summary { font-family: var(--display); }
+h1, h2, h3, .logo, .nav a, .nav button, .knopf, .karte-titel, .bereit-karte b, .modul0 strong, .riff-zaehler, .modul-zahl, .status, .kicker, .eintrag-kopf, .stempel-wort, .stempel-name, summary { font-family: var(--display); }
 a { color: inherit; }
 img { display: block; }
 :focus-visible { outline: 4px solid #FFD866; outline-offset: 3px; border-radius: 10px; }
@@ -59,9 +59,11 @@ img { display: block; }
 .logo { display: flex; align-items: center; gap: clamp(6px, 1vw, 12px); font-weight: 800; font-size: clamp(1.15rem, 3.5vw, 2.5rem); line-height: 1.1; white-space: nowrap; text-decoration: none; }
 .logo img { flex: none; width: clamp(40px, 4.5vw, 56px); height: auto; }
 .nav { display: flex; gap: 8px; }
-.nav a { padding: .3em .9em; font-weight: 700; text-decoration: none; background: var(--papier); border: 2.500px solid var(--linie); border-radius: 999px; }
+.nav a, .nav button { padding: .3em .9em; font-weight: 700; text-decoration: none; background: var(--papier); border: 2.500px solid var(--linie); border-radius: 999px; }
+.nav button { font-size: inherit; color: var(--tinte); cursor: pointer; }
+.nav button:disabled { opacity: .6; cursor: wait; }
 .nav a[aria-current="page"] { color: var(--auf-farbe); background: var(--sonne); }
-.vorschau-hinweis { padding: 6px 16px; text-align: center; font-size: .95rem; font-weight: 700; background: var(--warm); border-bottom: 2px solid var(--linie); }
+.vorschau-hinweis, .meldung { padding: 6px 16px; text-align: center; font-size: .95rem; font-weight: 700; background: var(--warm); border-bottom: 2px solid var(--linie); }
 
 .seite { max-width: var(--breite); margin: auto; padding: 18px 16px 64px; outline: none; }
 .abschnitt { margin: 32px 0 12px; font-size: 1.55rem; }
@@ -471,6 +473,7 @@ textarea { display: block; width: 100%; margin-top: 10px; padding: 10px; font: .
 .rechtstext { max-width: 760px; }
 .rechtstext h1 { font-size: 2.1rem; margin-bottom: 4px; }
 .rechtstext h2 { margin: 26px 0 8px; font-size: 1.35rem; }
+.rechtstext h3 { margin: 16px 0 4px; font-size: 1.1rem; }
 .rechtstext p, .rechtstext ul { margin-top: 8px; }
 .rechtstext ul { padding-left: 1.3em; }
 .rechts-kurz { margin-top: 18px; padding: 16px 20px; background: var(--flaeche); border: 3px solid var(--linie); border-radius: 18px; }
@@ -497,7 +500,7 @@ textarea { display: block; width: 100%; margin-top: 10px; padding: 10px; font: .
 /* Touch-Flächen: Alles, was man antippt, ist mindestens --ziel hoch.
    Nebeneinander liegende Knöpfe haben mindestens 8px Abstand. */
 .knopf { display: inline-flex; align-items: center; justify-content: center; gap: .4em; min-height: var(--ziel); }
-.logo, .nav a, .pfad-modul { display: inline-flex; align-items: center; min-height: 48px; }
+.logo, .nav a, .nav button, .pfad-modul { display: inline-flex; align-items: center; min-height: 48px; }
 .wahl-knopf { min-height: 48px; }
 .link-knopf { display: inline-flex; align-items: center; min-height: var(--ziel); padding: .3em 1em; font-family: var(--display); font-weight: 700; color: var(--tinte); text-decoration: none; background: var(--papier); border: 2.500px solid var(--linie); border-radius: 999px; }
 .reiter button, .menue button, .film-kapitel button { min-height: var(--ziel); }

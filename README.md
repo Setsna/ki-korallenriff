@@ -11,7 +11,9 @@ Es gibt keine Punkte und keinen Zeitdruck: Mit jeder fertigen Station wächst ei
 | Datei | Inhalt |
 |---|---|
 | `index.html` | Grundgerüst der Seite mit Kopf, Fußzeile und Kora-Hilfe |
-| `js/riff.js` | Speicher, Riff, Hauptseite, Tauchbuch, Abschlussseiten, Frag Kora und Film-Player |
+| `js/riff.js` | Anmeldung, Riff, Hauptseite, Tauchbuch, Abschlussseiten, Frag Kora und Film-Player |
+| `js/riff-speicher.js` | Stand des Kindes, Zusammenführen, Einträge (nur auf dem Gerät), Firebase-Angaben |
+| `js/konto-abgleich.js`, `js/konto-speicher.js`, `js/konto-cloud.js` | Gemeinsames Konto, Kopie aus dem Baukasten (`Lernlagune-Konto/Baukasten`) |
 | `js/riff-daten.js` | Module und Stationen mit Lernzielen, Reihenfolge und Lern-Konzept |
 | `js/riff-inhalte.js` | Texte der Stationen und Modul-Abschlüsse, dazu die Kinderfragen |
 | `js/riff-spiele.js` | Die Mini-Spiele der Stationen |
@@ -67,10 +69,9 @@ Alle Bewegungen im Film hängen an den Satzanfängen und passen sich deshalb von
 
 ## Vorschau
 
-`?vorschau=N` zeigt das Riff mit N fertigen Stationen (0 bis 9), zum Beispiel:
-https://setsna.github.io/ki-korallenriff/?vorschau=5
+`?vorschau=N` zeigt das Riff mit N fertigen Stationen (0 bis 9). Seit dem Konto-Umbau geht das nur auf dem eigenen Rechner (localhost), sonst käme man ohne Code ins Riff. In der Vorschau wird nichts gespeichert.
 
-In der Vorschau wird nichts gespeichert.
+Zum Ausprobieren mit Anmeldung, aber ohne echtes Firebase: `powershell -ExecutionPolicy Bypass -File tools\server.ps1`, dann `http://localhost:8171/tools/vorschau.html` (Testcodes stehen oben auf der Seite). Tests: `tools/rauchtest.html` und `tools/cloud-test.html`. Der Ordner `tools` liegt nur lokal und wird nicht hochgeladen.
 
 ## Gestaltung
 
@@ -86,25 +87,24 @@ Feste Bildschirmgrößen, nach denen sich die Seite richtet:
 Die Seite ist immer dunkel, auch wenn das Gerät auf hell eingestellt ist. Neue Elemente in allen vier Größen prüfen.
 Alles, was man antippt, ist mindestens 44 px hoch. Text hat mindestens 4,5:1 Kontrast.
 
-## Wo der Fortschritt liegt
+## Wo der Fortschritt liegt (seit dem Konto-Umbau, 14.11.2026)
 
-Nur im Browser des Geräts, unter dem Schlüssel `ki-korallenriff-v2` im `localStorage`, je Kind: Vorname, fertige Stationen, Stempel, Lernzeiten, Einträge und Einschätzungen.
-Ein alter Stand unter `ki-korallenriff-v1` wird beim ersten Öffnen als erstes Kind übernommen.
-Die Kinder arbeiten auf den iPads mit eigenen Accounts, deshalb reicht im Normalfall ein Kind pro Speicher: Es gibt einmal seinen Namen ein und landet danach direkt in seinem Riff.
-Sind im selben Browser mehrere Kinder angelegt, fragt die Seite „Wer taucht heute?“ (Wahl gilt für die Sitzung, `sessionStorage`) und zeigt „Kind wechseln“. Einen Passwortschutz zwischen den Kindern gibt es nicht.
-Die Seite bittet den Browser per `navigator.storage.persist()`, die Daten nicht von selbst zu löschen. Ob er zustimmt, entscheidet der Browser.
-Es gibt keine Anmeldung und keine Datenbank, und die Stände wandern nicht zwischen Geräten.
-„Alles löschen / Neu anfangen“ im Tauchbuch löscht nur den Stand des gewählten Kindes.
+Das Kind meldet sich mit dem Zugangscode des Perlentauchers an (Firebase-Projekt `lernplattform-44aa1`). Der Aufkleber führt auf die Seite mit `#c=CODE`. Der Vorname kommt aus `kinder/<code>`.
+Der Fortschritt liegt in `kr_stand/<code>` mit genau den Feldern `done, stempel, zeit, ziele, angelegt, geaendert` (Obergrenze der Regeln: 60 Einträge je Karte). Im Browser: `ki-korallenriff-v3.<code>` (Stand mit Vorname) und `ki-korallenriff-v3.<code>.abgleich`.
+Die Einträge („Mein Eintrag“, „Denk weiter“, höchstens 2000 Zeichen) liegen nur im Browser unter `ki-korallenriff-v3.<code>.eintraege` und gehen nie in die Datenbank.
+Kein Löschknopf für Kinder. Zurücksetzen, Auskunft und Löschen macht die Lehrkraft im Lehrerbereich des Perlentauchers.
+Ein alter Stand unter `ki-korallenriff-v2` bleibt unberührt liegen und wird nicht übernommen.
+**Ein neues Feld im Stand oder mehr als 60 Einträge je Karte brauchen eine Änderung der Firebase-Regeln** (nur mit Ingos OK).
 
 ## Datenschutz
 
-Die Seite setzt keine Cookies und lädt nichts von fremden Servern nach, auch die Schriften liegen hier im Repository.
+Die Seite setzt keine Cookies. Einzige fremde Quelle ist Google Firebase für das gemeinsame Konto (Skripte von `www.gstatic.com` mit Prüfsumme, nur in `index.html`). Schriften, Bilder und Ton liegen hier im Repository.
 **Wer ändert, welche Daten gespeichert werden, oder einen neuen Dienst einbindet, muss `datenschutz.html` mitändern.**
 
 ## Nach einer Änderung: Versionsnummer hochzählen
 
 Browser merken sich `js` und `css` eine Weile und liefern sonst die alte Fassung aus.
-Deshalb hängt hinter jeder lokalen `js`- und `css`-Datei in `index.html`, `impressum.html` und `datenschutz.html` ein `?v=30`.
+Deshalb hängt hinter jeder lokalen `js`- und `css`-Datei in `index.html`, `impressum.html` und `datenschutz.html` ein `?v=N` (zuletzt `?v=34`).
 **Wer etwas an `js` oder `css` ändert, zählt diese Zahl in allen drei Dateien um eins hoch.**
 Dann laden die Geräte beim nächsten Öffnen der Seite die neue Fassung.
 
