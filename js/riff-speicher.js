@@ -125,7 +125,8 @@
     speicher: S, mische, neuanfang,
     brauchtAngaben: false,
     schreibPauseMs: 2500,
-    nameMax: 20
+    nameMax: 20,
+    freigabe: 'korallenriff'   /* Schlüssel im Lehrerbereich des Perlentauchers (oeffentlich/plattformen), seit 21.11.2026 */
   });
 
   /* ---------- Einträge: nur auf diesem Gerät ---------- */

@@ -248,6 +248,7 @@ Beginne mit einer kurzen Begrüßung und frag, wobei du helfen kannst.`;
 
   /* Ergebnis von cloud.anmelden() oder cloud.start() anzeigen */
   function nachAnmelden(r) {
+    if (!r.ok && r.zu) { ansichtZu(); return; }
     if (!r.ok) {
       if (ansicht === 'code' && document.getElementById('code')) {
         app.querySelector('#code-form button[type="submit"]').disabled = false;
@@ -258,6 +259,46 @@ Beginne mit einer kurzen Begrüßung und frag, wobei du helfen kannst.`;
     }
     route();
     if (r.gespeichert === false) melden('Dein Stand konnte auf diesem Gerät nicht gespeichert werden. Bitte sag deiner Lehrkraft Bescheid.');
+  }
+
+  /* Die Lehrkraft hat das KI-Korallenriff im Lehrerbereich gesperrt (oeffentlich/plattformen, js/konto-cloud.js).
+     Das Kind ist schon wieder abgemeldet, sein Stand bleibt auf dem Gerät und in der Datenbank.
+     Text von Ingo gewählt am 21.11.2026 (cloud.TEXT.zu): „Bald offen!“ als Überschrift, der Rest darunter.
+     Gebaut wie in der Kieselwaage (v=7), hier im Stil der Code-Eingabe mit Kora. */
+  const SCHLOSS = '<svg class="schloss" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>';
+  function ansichtZu() {
+    const text = cloud.TEXT.zu;
+    const i = text.indexOf('! ');
+    const titel = i > 0 ? text.slice(0, i + 1) : 'Bald offen';
+    const rest = i > 0 ? text.slice(i + 2) : text;
+    /* Was route() sonst aufräumt: Uhr ohne Buchung anhalten (das Kind ist abgemeldet), Kora, Film, Einblendung */
+    uhr = null;
+    wartendeUhr = null;
+    kora.leeren();
+    if (filmStopp) { filmStopp(); filmStopp = null; }
+    document.getElementById('einblendung').innerHTML = '';
+    document.getElementById('nav-ab').hidden = true;
+    document.querySelectorAll('[data-nav]').forEach(a => a.removeAttribute('aria-current'));
+    if (location.hash) history.replaceState(null, '', location.pathname + location.search);
+    ansicht = 'zu';
+    app.innerHTML = `
+    <section class="hallo zu">
+      <img class="hallo-kora" src="bilder/kora.png" alt="" width="200" height="200">
+      <div class="blase">
+        <h1 id="h-zu">${SCHLOSS}${esc(titel)}</h1>
+        <p>${esc(rest)}</p>
+        <p class="knopf-reihe"><button type="button" class="knopf" id="zu-ab">Abmelden</button></p>
+      </div>
+    </section>`;
+    document.title = 'Bald offen – Tauchgang im KI-Korallenriff';
+    const h1 = document.getElementById('h-zu');
+    if (!ersterAufruf) { h1.tabIndex = -1; h1.focus({ preventScroll: true }); }
+    ersterAufruf = false;
+    window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
+    document.getElementById('zu-ab').addEventListener('click', e => {
+      e.currentTarget.disabled = true;
+      cloud.abmelden().then(route, route);
+    });
   }
 
   /* Zeile auf der Riff-Übersicht, wenn der Stand gerade nicht in der Datenbank ankommt */
@@ -1097,7 +1138,7 @@ Beginne mit einer kurzen Begrüßung und frag, wobei du helfen kannst.`;
       if (S.aktiv() && S.code() !== qr) S.abmelden();
       route();
       if (!S.aktiv()) document.getElementById('code-hinweis').textContent = MOMENT;
-      cloud.anmelden(qr).then(r => { if (darfWechseln()) { if (!r.ok) ansichtCode(r.grund); else nachAnmelden(r); } }, () => {});
+      cloud.anmelden(qr).then(r => { if (r.zu) ansichtZu(); else if (darfWechseln()) { if (!r.ok) ansichtCode(r.grund); else nachAnmelden(r); } }, () => {});
       return;
     }
     route();
@@ -1106,11 +1147,14 @@ Beginne mit einer kurzen Begrüßung und frag, wobei du helfen kannst.`;
     const gemerkt = S.code();
     cloud.start().then(r => {
       if (r.ok) { if (darfWechseln()) nachAnmelden(r); return null; }
+      /* Gesperrt: auch mitten in einer Station wechseln, denn das Kind ist schon abgemeldet */
+      if (r.zu) { ansichtZu(); return null; }
       if (r.grund) return r;
       /* Firebase kennt niemanden, der Tab aber schon: mit dem gemerkten Code anmelden */
       return gemerkt && S.code() === gemerkt ? cloud.anmelden(gemerkt) : null;
     }).then(r => {
       if (!r) return;
+      if (r.zu) { ansichtZu(); return; }
       if (r.ok) { if (ansicht === 'riff') route(); return; }
       /* Die Lehrkraft hat den Code gesperrt: nicht auf dem Gerät weitermachen lassen */
       if (r.grund === cloud.TEXT.gesperrt && S.aktiv()) { S.abmelden(); route(); ansichtCode(r.grund); }
